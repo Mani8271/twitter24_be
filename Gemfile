@@ -44,6 +44,9 @@ gem 'activeadmin'
 gem 'devise' 
 
 gem "sassc-rails"
+gem 'jwt'
+ gem 'pry'
+ 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
@@ -68,3 +71,5 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
 end
+
+gem "active_model_serializers", "~> 0.10.16"
