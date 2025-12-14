@@ -20,4 +20,7 @@ class User < ApplicationRecord
     )
     otp
   end
+   def self.ransackable_attributes(auth_object = nil)
+    ["account_type", "country_id", "created_at", "currency_pref", "current_location_size_id", "email", "email_verified", "followin_business", "id", "id_value", "is_online", "name", "password_digest", "phone_number", "phone_verified", "profile_picture", "region_id", "status", "updated_at", "zone_location_id"]
+  end
 end
