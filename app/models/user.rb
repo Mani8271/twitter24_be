@@ -5,6 +5,8 @@ class User < ApplicationRecord
   validates :phone_number, presence: true, uniqueness: { case_sensitive: false }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
  
+has_one :business, dependent: :destroy
+has_one :onboarding_progress, dependent: :destroy
 
  
 

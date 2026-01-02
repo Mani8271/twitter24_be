@@ -15,4 +15,16 @@ Rails.application.routes.draw do
   post 'verify_otp', to: 'auth#verify_otp'
    post 'reset_password', to: 'auth#reset_password'
   
+  resources :global_feeds
+
+    scope "/onboarding" do
+    post  "/step1", to: "onboarding#step1_business_details"
+    post  "/step2", to: "onboarding#step2_contact_info"
+    post  "/step3", to: "onboarding#step3_location"
+    post  "/step4", to: "onboarding#step4_hours"
+    post  "/step5", to: "onboarding#step5_documents"
+    post  "/step6", to: "onboarding#step6_images"
+
+    get   "/status", to: "onboarding#status"
+  end
 end
