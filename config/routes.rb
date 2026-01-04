@@ -14,6 +14,8 @@ Rails.application.routes.draw do
   post 'send_otp',   to: 'auth#send_otp'
   post 'verify_otp', to: 'auth#verify_otp'
    post 'reset_password', to: 'auth#reset_password'
+   get   "/me", to: "users#me"
+   put "/me", to: "users#update_me"
   
   resources :global_feeds
 
@@ -26,5 +28,11 @@ Rails.application.routes.draw do
     post  "/step6", to: "onboarding#step6_images"
 
     get   "/status", to: "onboarding#status"
+    get "/step1", to: "onboarding#get_step1"
+    get "/step2", to: "onboarding#get_step2"
+    get "/step3", to: "onboarding#get_step3"
+    get "/step4", to: "onboarding#get_step4"
+    get "/step5", to: "onboarding#get_step5"
+    get "/step6", to: "onboarding#get_step6"
   end
 end

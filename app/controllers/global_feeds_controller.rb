@@ -1,12 +1,148 @@
+# class GlobalFeedsController < ApplicationController
+#   before_action :authorize_request
+#   before_action :set_global_feed, only: [:show, :update, :destroy]
+
+#   # GET /global_feeds
+#   def index
+#     feeds = GlobalFeed.order(created_at: :desc)
+#     render json: feeds.map { |feed| feed_response(feed) }
+#   end
+
+#   # GET /global_feeds/:id
+#   def show
+#     render json: feed_response(@global_feed)
+#   end
+
+#   # POST /global_feeds
+#   def create
+#     feed = GlobalFeed.new(feed_params)
+
+#     normalize_tags(feed)
+#     normalize_links(feed)
+#     attach_media(feed)
+
+#     if feed.save
+#       render json: feed_response(feed), status: :created
+#     else
+#       render json: { errors: feed.errors.full_messages }, status: :unprocessable_entity
+#     end
+#   end
+
+#   # PATCH /global_feeds/:id
+#   def update
+#     @global_feed.assign_attributes(feed_params)
+
+#     normalize_tags(@global_feed)
+#     normalize_links(@global_feed)
+#     attach_media(@global_feed)
+
+#     if @global_feed.save
+#       render json: feed_response(@global_feed)
+#     else
+#       render json: { errors: @global_feed.errors.full_messages }, status: :unprocessable_entity
+#     end
+#   end
+
+#   # DELETE /global_feeds/:id
+#   def destroy
+#     @global_feed.destroy
+#     render json: { message: "Global feed deleted successfully" }
+#   end
+
+#   private
+
+#   def set_global_feed
+#     @global_feed = GlobalFeed.find(params[:id])
+#   end
+
+#   def feed_params
+#     params.permit(
+#       :title,
+#       :description,
+#       :category,
+#       :disappear_after
+#     )
+#   end
+
+#   # -------- NORMALIZERS --------
+
+#   def normalize_tags(feed)
+#     feed.tags = params[:tags] if params[:tags].present?
+#   end
+
+#   def normalize_links(feed)
+#     return unless params[:links].present?
+
+#     # Convert {"0"=>{...}} → [{...}]
+#     feed.links = params[:links].values
+#   end
+
+#   def attach_media(feed)
+#     return unless params[:media].present?
+
+#     feed.media.attach(params[:media])
+#   end
+
+#   # -------- RESPONSE --------
+
+#   def feed_response(feed)
+#     {
+#       id: feed.id,
+#       title: feed.title,
+#       description: feed.description,
+#       category: feed.category,
+#       tags: feed.tags || [],
+#       links: feed.links || [],
+#       disappear_after: feed.disappear_after,
+#       media: feed.media.map do |file|
+#         {
+#           id: file.id,
+#           url: url_for(file),
+#           content_type: file.content_type
+#         }
+#       end,
+#       created_at: feed.created_at
+#     }
+#   end
+# endclass GlobalFeedsController < ApplicationController
 class GlobalFeedsController < ApplicationController
   before_action :authorize_request
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
-  # GET /global_feeds
-  def index
-    feeds = GlobalFeed.order(created_at: :desc)
-    render json: feeds.map { |feed| feed_response(feed) }
+def index
+  feeds = GlobalFeed.order(created_at: :desc)
+
+  # ✅ 1) TYPE filter (local/global)
+  if params[:type].present?
+    unless %w[global local].include?(params[:type])
+      return render json: { error: "Invalid type. Use type=global or type=local" }, status: :bad_request
+    end
+    feeds = feeds.where(feed_type: params[:type])
   end
+
+  # ✅ 2) SCOPE filter
+  # default (discover) => exclude current_user posts
+  if params[:scope] == "my"
+    feeds = feeds.where(user_id: current_user.id)
+  else
+    feeds = feeds.where.not(user_id: current_user.id)
+  end
+
+  # ✅ 3) SEARCH filter
+  if params[:q].present?
+    q = params[:q].to_s.strip
+    if q.present?
+      like = "%#{q.downcase}%"
+      feeds = feeds.where(
+        "LOWER(title) LIKE :q OR LOWER(description) LIKE :q OR LOWER(category) LIKE :q OR LOWER(address) LIKE :q",
+        q: like
+      )
+    end
+  end
+
+  render json: feeds.map { |feed| feed_response(feed) }
+end
+
 
   # GET /global_feeds/:id
   def show
@@ -15,13 +151,18 @@ class GlobalFeedsController < ApplicationController
 
   # POST /global_feeds
   def create
-    feed = GlobalFeed.new(feed_params)
+    feed = GlobalFeed.new(feed_params.except(:media))
+    feed.user_id = current_user.id
 
     normalize_tags(feed)
     normalize_links(feed)
-    attach_media(feed)
 
     if feed.save
+      # ✅ ATTACH MEDIA ONLY ONCE (AFTER SAVE)
+      if feed_params[:media].present?
+        feed.media.attach(feed_params[:media])
+      end
+
       render json: feed_response(feed), status: :created
     else
       render json: { errors: feed.errors.full_messages }, status: :unprocessable_entity
@@ -30,13 +171,22 @@ class GlobalFeedsController < ApplicationController
 
   # PATCH /global_feeds/:id
   def update
-    @global_feed.assign_attributes(feed_params)
+    unless @global_feed.user_id == current_user.id
+      return render json: { error: "Not authorized" }, status: :forbidden
+    end
+
+    @global_feed.assign_attributes(feed_params.except(:media))
 
     normalize_tags(@global_feed)
     normalize_links(@global_feed)
-    attach_media(@global_feed)
 
     if @global_feed.save
+      # ✅ replace media only if new media sent
+      if feed_params[:media].present?
+        @global_feed.media.purge
+        @global_feed.media.attach(feed_params[:media])
+      end
+
       render json: feed_response(@global_feed)
     else
       render json: { errors: @global_feed.errors.full_messages }, status: :unprocessable_entity
@@ -45,8 +195,12 @@ class GlobalFeedsController < ApplicationController
 
   # DELETE /global_feeds/:id
   def destroy
+    unless @global_feed.user_id == current_user.id
+      return render json: { error: "Not authorized" }, status: :forbidden
+    end
+
     @global_feed.destroy
-    render json: { message: "Global feed deleted successfully" }
+    render json: { message: "Feed deleted successfully" }
   end
 
   private
@@ -55,32 +209,63 @@ class GlobalFeedsController < ApplicationController
     @global_feed = GlobalFeed.find(params[:id])
   end
 
+  # ✅ STRONG PARAMS (FINAL)
   def feed_params
     params.permit(
       :title,
       :description,
       :category,
-      :disappear_after
+      :disappear_after,
+      :feed_type,
+
+      # local fields
+      :latitude,
+      :longitude,
+      :address,
+      :reach_distance,
+
+      # arrays
+      tags: [],
+      media: [],
+
+      # links array
+      links: [:name, :url]
     )
   end
 
   # -------- NORMALIZERS --------
 
   def normalize_tags(feed)
-    feed.tags = params[:tags] if params[:tags].present?
+    feed.tags = feed_params[:tags] if feed_params[:tags].present?
   end
 
   def normalize_links(feed)
     return unless params[:links].present?
 
-    # Convert {"0"=>{...}} → [{...}]
-    feed.links = params[:links].values
-  end
+    raw = params[:links]
 
-  def attach_media(feed)
-    return unless params[:media].present?
+    links_array =
+      if raw.is_a?(ActionController::Parameters)
+        h = raw.to_unsafe_h
+        h.keys.all? { |k| k.to_s =~ /^\d+$/ } ? h.values : [h]
+      elsif raw.is_a?(Hash)
+        raw.keys.all? { |k| k.to_s =~ /^\d+$/ } ? raw.values : [raw]
+      elsif raw.is_a?(Array)
+        raw
+      elsif raw.is_a?(String)
+        begin
+          parsed = JSON.parse(raw)
+          parsed.is_a?(Array) ? parsed : [parsed]
+        rescue JSON::ParserError
+          []
+        end
+      else
+        []
+      end
 
-    feed.media.attach(params[:media])
+    feed.links = links_array.map do |l|
+      l.is_a?(ActionController::Parameters) ? l.to_unsafe_h : l
+    end
   end
 
   # -------- RESPONSE --------
@@ -88,12 +273,22 @@ class GlobalFeedsController < ApplicationController
   def feed_response(feed)
     {
       id: feed.id,
+      user_id: feed.user_id,
+      feed_type: feed.feed_type,
+
       title: feed.title,
       description: feed.description,
       category: feed.category,
+
       tags: feed.tags || [],
       links: feed.links || [],
       disappear_after: feed.disappear_after,
+
+      latitude: feed.latitude,
+      longitude: feed.longitude,
+      address: feed.address,
+      reach_distance: feed.reach_distance,
+
       media: feed.media.map do |file|
         {
           id: file.id,
@@ -101,7 +296,11 @@ class GlobalFeedsController < ApplicationController
           content_type: file.content_type
         }
       end,
+
       created_at: feed.created_at
     }
   end
 end
+
+
+

@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   has_secure_password
-
+  has_one_attached :profile_picture
   validates :name, presence: true
   validates :phone_number, presence: true, uniqueness: { case_sensitive: false }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true

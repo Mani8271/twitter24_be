@@ -153,6 +153,43 @@ class OnboardingController < ApplicationController
 end
 
 
+   def get_step1
+    render json: current_user.business&.slice(
+      :name, :category, :year_established, :website, :about, :products_services
+    )
+  end
+
+  # GET /onboarding/step2
+  def get_step2
+    render json: current_user.business&.business_contact
+  end
+
+  # GET /onboarding/step3
+  def get_step3
+    render json: current_user.business&.business_location
+  end
+
+  # GET /onboarding/step4
+  def get_step4
+    render json: current_user.business&.business_hours
+  end
+
+  # GET /onboarding/step5
+  def get_step5
+    render json: current_user.business&.business_document
+  end
+
+  # GET /onboarding/step6
+  def get_step6
+    business = current_user.business
+
+    render json: {
+      profile_picture: business&.profile_picture&.attached? ? url_for(business.profile_picture) : nil,
+      shop_images: business&.shop_images&.map { |img| url_for(img) } || []
+    }
+  end
+
+
   
 
   private
