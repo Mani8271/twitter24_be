@@ -35,4 +35,11 @@ Rails.application.routes.draw do
     get "/step5", to: "onboarding#get_step5"
     get "/step6", to: "onboarding#get_step6"
   end
+
+
+  post "/live_location", to: "live_locations#upsert"
+get  "/live_location/me", to: "live_locations#me"
+get  "/live_location/reach_counts", to: "live_locations#reach_counts"
+  get "reach_distance/summary", to: "reach_distance#summary"
+
 end

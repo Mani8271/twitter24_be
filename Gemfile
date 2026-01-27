@@ -75,3 +75,5 @@ group :test do
 end
 
 gem "active_model_serializers", "~> 0.10.16"
+
+gem "geocoder", "~> 1.8"

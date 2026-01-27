@@ -130,6 +130,7 @@ class AuthController < ApplicationController
       :locale,
       :currency_pref,
       :zone_location_id,
+        :account_type, 
       :email_verified,     
       :phone_verified 
     )

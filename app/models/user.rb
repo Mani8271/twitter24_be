@@ -1,12 +1,16 @@
 class User < ApplicationRecord
   has_secure_password
   has_one_attached :profile_picture
+  has_many :live_locations, dependent: :destroy
   validates :name, presence: true
   validates :phone_number, presence: true, uniqueness: { case_sensitive: false }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :account_type, inclusion: { in: %w[user business] }
+
  
 has_one :business, dependent: :destroy
 has_one :onboarding_progress, dependent: :destroy
+has_one :live_location, dependent: :destroy
 
  
 
@@ -23,6 +27,15 @@ has_one :onboarding_progress, dependent: :destroy
     otp
   end
    def self.ransackable_attributes(auth_object = nil)
-    ["account_type", "country_id", "created_at", "currency_pref", "current_location_size_id", "email", "email_verified", "followin_business", "id", "id_value", "is_online", "name", "password_digest", "phone_number", "phone_verified", "profile_picture", "region_id", "status", "updated_at", "zone_location_id"]
+    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
+  end
+    def self.ransackable_associations(auth_object = nil)
+    ["business", "live_location", "live_locations", "onboarding_progress", "profile_picture_attachment", "profile_picture_blob"]
+  end
+    def self.ransackable_attributes(auth_object = nil)
+    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
+  end
+    def self.ransackable_attributes(auth_object = nil)
+    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
   end
 end
