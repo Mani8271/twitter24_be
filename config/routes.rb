@@ -42,4 +42,11 @@ get  "/live_location/me", to: "live_locations#me"
 get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   get "reach_distance/summary", to: "reach_distance#summary"
 
+
+  resources :likes, only: [:create, :destroy]   # plural
+  resources :comments, only: [:index, :create, :destroy]
+  resource :view, only: [:create]              # singular is okay
+
+
+
 end

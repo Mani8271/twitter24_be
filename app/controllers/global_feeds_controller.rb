@@ -288,6 +288,11 @@ end
       longitude: feed.longitude,
       address: feed.address,
       reach_distance: feed.reach_distance,
+      likes_count: feed.likes.count,
+      comments_count: feed.comments.count,
+      views_count: feed.views.count,
+      liked_by_me: feed.likes.exists?(user_id: current_user.id),
+
 
       media: feed.media.map do |file|
         {
@@ -298,6 +303,7 @@ end
       end,
 
       created_at: feed.created_at
+
     }
   end
 end
