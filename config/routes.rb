@@ -46,6 +46,8 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :likes, only: [:create, :destroy]   # plural
   resources :comments, only: [:index, :create, :destroy]
   resource :view, only: [:create]              # singular is okay
+  resources :businesses, only: [:index, :show]
+  resources :reviews, only: [:index, :create]
 
 
 
