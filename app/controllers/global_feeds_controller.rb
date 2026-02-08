@@ -316,6 +316,39 @@ class GlobalFeedsController < ApplicationController
       tags: [], media: [], links: [:name, :url]
     )
   end
+
+    def normalize_tags(feed)
+    feed.tags = feed_params[:tags] if feed_params[:tags].present?
+  end
+
+  def normalize_links(feed)
+    return unless params[:links].present?
+
+    raw = params[:links]
+
+    links_array =
+      if raw.is_a?(ActionController::Parameters)
+        h = raw.to_unsafe_h
+        h.keys.all? { |k| k.to_s =~ /^\d+$/ } ? h.values : [h]
+      elsif raw.is_a?(Hash)
+        raw.keys.all? { |k| k.to_s =~ /^\d+$/ } ? raw.values : [raw]
+      elsif raw.is_a?(Array)
+        raw
+      elsif raw.is_a?(String)
+        begin
+          parsed = JSON.parse(raw)
+          parsed.is_a?(Array) ? parsed : [parsed]
+        rescue JSON::ParserError
+          []
+        end
+      else
+        []
+      end
+
+    feed.links = links_array.map do |l|
+      l.is_a?(ActionController::Parameters) ? l.to_unsafe_h : l
+    end
+  end
 end
 
 

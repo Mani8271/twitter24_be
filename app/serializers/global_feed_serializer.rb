@@ -49,17 +49,20 @@ class GlobalFeedSerializer < ActiveModel::Serializer
     object.user.account_type
   end
 
-  def business
-    biz = object.user.business
-    return nil unless biz
+ def business
+  return nil unless object.user.account_type == "business"
 
-    {
-      id: biz.id,
-      name: biz.name,
-      category: biz.category,
-      profile_picture: biz.profile_picture.attached? ? url_for(biz.profile_picture) : nil
-    }
-  end
+  biz = object.user.business
+  return nil unless biz
+
+  {
+    id: biz.id,
+    name: biz.name,
+    category: biz.category,
+    profile_picture: biz.profile_picture.attached? ? url_for(biz.profile_picture) : nil
+  }
+end
+
 
   # =========================
   # MEDIA
