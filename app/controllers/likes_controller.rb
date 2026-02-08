@@ -22,7 +22,7 @@ class LikesController < ApplicationController
   private
 
   def set_likeable
-    allowed_types = %w[GlobalFeed FreedCrate]
+     allowed_types = %w[GlobalFeed FreedCrate Business]
 
     type = params[:likeable_type]
     raise ActiveRecord::RecordNotFound unless allowed_types.include?(type)

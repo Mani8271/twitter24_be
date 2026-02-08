@@ -1,5 +1,5 @@
 class GlobalFeed < ApplicationRecord
-  belongs_to :user, optional: true
+  belongs_to :user
   has_many_attached :media
   
   has_many :likes, as: :likeable, dependent: :destroy
@@ -17,6 +17,9 @@ class GlobalFeed < ApplicationRecord
 
   validate :tags_array
   validate :links_array_structure
+
+    scope :global_only, -> { where(feed_type: "global") }
+  scope :local_only,  -> { where(feed_type: "local") }
 
   private
 

@@ -11,8 +11,9 @@ class User < ApplicationRecord
 has_one :business, dependent: :destroy
 has_one :onboarding_progress, dependent: :destroy
 has_one :live_location, dependent: :destroy
+ has_many :global_feeds
 
- 
+   validate :business_required_for_business_account
 
   def generate_otp
     
@@ -25,6 +26,11 @@ has_one :live_location, dependent: :destroy
       otp_expiry: 10.minutes.from_now
     )
     otp
+  end
+   def business_required_for_business_account
+    if account_type == "business" && business.nil?
+      errors.add(:business, "must exist for business accounts")
+    end
   end
    def self.ransackable_attributes(auth_object = nil)
     ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]

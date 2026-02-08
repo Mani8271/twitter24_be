@@ -41,6 +41,7 @@ Rails.application.routes.draw do
 get  "/live_location/me", to: "live_locations#me"
 get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   get "reach_distance/summary", to: "reach_distance#summary"
+  get "businesses/:business_id/feeds", to: "business_feeds#index"
 
 
   resources :likes, only: [:create, :destroy]   # plural
@@ -48,6 +49,9 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resource :view, only: [:create]              # singular is okay
   resources :businesses, only: [:index, :show]
   resources :reviews, only: [:index, :create]
+  post "/follow", to: "follows#create"
+
+
 
 
 
