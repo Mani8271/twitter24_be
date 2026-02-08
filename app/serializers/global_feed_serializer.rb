@@ -59,7 +59,7 @@ class GlobalFeedSerializer < ActiveModel::Serializer
     id: biz.id,
     name: biz.name,
     category: biz.category,
-    profile_picture: biz.profile_picture.attached? ? url_for(biz.profile_picture) : nil
+   profile_picture: biz.profile_picture.attached? ? rails_blob_url(biz.profile_picture) : nil
   }
 end
 
@@ -67,13 +67,13 @@ end
   # =========================
   # MEDIA
   # =========================
-  def media
-    object.media.map do |file|
-      {
-        id: file.id,
-        url: url_for(file),
-        content_type: file.content_type
-      }
-    end
+ def media
+  object.media.map do |file|
+    {
+      id: file.id,
+      url: rails_blob_url(file),
+      content_type: file.content_type
+    }
   end
+end
 end
