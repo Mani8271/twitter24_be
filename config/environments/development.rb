@@ -63,8 +63,8 @@ Rails.application.configure do
   config.assets.quiet = true
 
 
-  Rails.application.routes.default_url_options[:host] = 'http://localhost:3000'
-  # Rails.application.routes.default_url_options[:host] = 'https://twitter24-be.onrender.com'
+  # Rails.application.routes.default_url_options[:host] = 'http://localhost:3000'
+  Rails.application.routes.default_url_options[:host] = 'https://twitter24-be.onrender.com'
 
 
   # Raises error for missing translations.
