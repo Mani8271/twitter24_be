@@ -64,7 +64,8 @@ Rails.application.configure do
 
 
   # Rails.application.routes.default_url_options[:host] = 'http://localhost:3000'
-  Rails.application.routes.default_url_options[:host] = 'https://twitter24-be.onrender.com'
+ Rails.application.routes.default_url_options[:host] = "twitter24-be.onrender.com"
+Rails.application.routes.default_url_options[:protocol] = "https"
 
 
   # Raises error for missing translations.
