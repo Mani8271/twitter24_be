@@ -13,7 +13,16 @@ has_one :onboarding_progress, dependent: :destroy
 has_one :live_location, dependent: :destroy
  has_many :global_feeds
 
-   validate :business_required_for_business_account
+ validate :business_required_for_business_account, on: :update
+
+ has_many :follows, dependent: :destroy
+
+ has_many :followed_businesses,
+          -> { where(follows: { followable_type: "Business" }) },
+          through: :follows,
+          source: :followable,
+          source_type: "Business"
+
 
   def generate_otp
     

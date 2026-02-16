@@ -106,11 +106,14 @@ end
   # IMAGES
   # =================================
   def images
+    return {} unless object.profile_picture.attached? || object.shop_images.attached?
+  
     {
       profile_picture: object.profile_picture.attached? ? url_for(object.profile_picture) : nil,
       gallery: object.shop_images.map { |img| url_for(img) }
     }
   end
+  
 
    def favorites_count
     object.favorites_count
