@@ -108,11 +108,19 @@ end
   def images
     return {} unless object.profile_picture.attached? || object.shop_images.attached?
   
+    host = ENV["APP_HOST"] || "twitter24-be.onrender.com"
+  
     {
-      profile_picture: object.profile_picture.attached? ? url_for(object.profile_picture) : nil,
-      gallery: object.shop_images.map { |img| url_for(img) }
+      profile_picture: object.profile_picture.attached? ?
+        rails_blob_url(object.profile_picture, host: host) :
+        nil,
+  
+      gallery: object.shop_images.map do |img|
+        rails_blob_url(img, host: host)
+      end
     }
   end
+  
   
 
    def favorites_count
