@@ -47,8 +47,13 @@ class UserSerializer < ActiveModel::Serializer
 
   def profile_picture
     return nil unless object.profile_picture.attached?
-    rails_blob_url(object.profile_picture)
+
+    rails_blob_url(
+      object.profile_picture,
+      host: ENV["APP_HOST"] || "twitter24-be.onrender.com"
+    )
   end
+  
 
   def followed_businesses_count
     object.followed_businesses.count
