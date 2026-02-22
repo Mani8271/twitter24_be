@@ -16,6 +16,8 @@ Rails.application.routes.draw do
    post 'reset_password', to: 'auth#reset_password'
    get   "/me", to: "users#me"
    put "/me", to: "users#update_me"
+   put "/change_password", to: "users#change_password"
+   get "/followed_businesses", to: "users#followed_businesses"
   
   resources :global_feeds
 
@@ -50,6 +52,7 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :businesses, only: [:index, :show]
   resources :reviews, only: [:index, :create]
   post "/follow", to: "follows#create"
+  resources :offers
 
 
 

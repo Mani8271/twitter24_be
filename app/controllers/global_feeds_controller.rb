@@ -256,24 +256,54 @@ class GlobalFeedsController < ApplicationController
            scope: current_user
   end
 
+  # def create
+  #   feed = GlobalFeed.new(feed_params.except(:media))
+  #   feed.user = current_user
+
+  #   normalize_tags(feed)
+  #   normalize_links(feed)
+
+  #   if feed.save
+  #     feed.media.attach(feed_params[:media]) if feed_params[:media].present?
+
+  #     render json: feed,
+  #            serializer: GlobalFeedSerializer,
+  #            scope: current_user,
+  #            status: :created
+  #   else
+  #     render json: { errors: feed.errors.full_messages }, status: :unprocessable_entity
+  #   end
+  # end
   def create
-    feed = GlobalFeed.new(feed_params.except(:media))
-    feed.user = current_user
-
-    normalize_tags(feed)
-    normalize_links(feed)
-
-    if feed.save
-      feed.media.attach(feed_params[:media]) if feed_params[:media].present?
-
-      render json: feed,
-             serializer: GlobalFeedSerializer,
+    ActiveRecord::Base.transaction do
+      created_feeds = []
+  
+      # 🔹 Main feed (requested type)
+      main_feed = build_feed(feed_params[:feed_type])
+      main_feed.save!
+      attach_media(main_feed)
+  
+      created_feeds << main_feed
+  
+      # 🔹 If create_both = true AND local selected
+      if params[:create_both].to_s == "true" 
+        global_feed = build_feed("global")
+        global_feed.save!
+        attach_media(global_feed)
+  
+        created_feeds << global_feed
+      end
+  
+      render json: created_feeds,
+             each_serializer: GlobalFeedSerializer,
              scope: current_user,
              status: :created
-    else
-      render json: { errors: feed.errors.full_messages }, status: :unprocessable_entity
     end
+  
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
+  
 
   def update
     return render json: { error: "Not authorized" }, status: :forbidden if @global_feed.user != current_user
@@ -316,6 +346,22 @@ class GlobalFeedsController < ApplicationController
       tags: [], media: [], links: [:name, :url]
     )
   end
+
+  def build_feed(type)
+    feed = GlobalFeed.new(feed_params.except(:media))
+    feed.user = current_user
+    feed.feed_type = type
+  
+    normalize_tags(feed)
+    normalize_links(feed)
+  
+    feed
+  end
+  
+  def attach_media(feed)
+    feed.media.attach(feed_params[:media]) if feed_params[:media].present?
+  end
+  
 
     def normalize_tags(feed)
     feed.tags = feed_params[:tags] if feed_params[:tags].present?

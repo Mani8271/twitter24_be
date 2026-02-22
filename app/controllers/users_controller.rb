@@ -16,6 +16,30 @@ class UsersController < ApplicationController
              status: :unprocessable_entity
     end
   end
+ #change pass
+  def change_password
+    unless current_user.authenticate(params[:current_password])
+      return render json: { error: "Current password is incorrect" }, status: :unauthorized
+    end
+  
+    if params[:new_password].blank?
+      return render json: { error: "New password cannot be blank" }, status: :unprocessable_entity
+    end
+  
+    if params[:new_password] != params[:password_confirmation]
+      return render json: { error: "Password confirmation does not match" }, status: :unprocessable_entity
+    end
+  
+    if current_user.update(password: params[:new_password])
+      render json: { message: "Password updated successfully" }, status: :ok
+    else
+      render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+  def followed_businesses
+    businesses = current_user.followed_businesses
+    render json: businesses, each_serializer: BusinessSerializer
+  end
 
   private
 

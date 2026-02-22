@@ -21,7 +21,8 @@ class GlobalFeedSerializer < ActiveModel::Serializer
              :posted_by,
              :business,
              :media,
-             :created_at
+             :created_at,
+             :created_user 
 
   # =========================
   # COUNTS
@@ -62,6 +63,21 @@ class GlobalFeedSerializer < ActiveModel::Serializer
 profile_picture: biz.profile_picture.attached? ? rails_blob_url(biz.profile_picture, host: "https://twitter24-be.onrender.com") : nil
   }
 end
+
+
+def created_user
+  user = object.user
+  return nil unless user
+
+  {
+    id: user.id,
+    name: user.name,
+    profile_picture: user.profile_picture.attached? ?
+      rails_blob_url(user.profile_picture, host: ENV["APP_HOST"] || "https://twitter24-be.onrender.com") :
+      nil
+  }
+end
+
 
 
   # =========================
