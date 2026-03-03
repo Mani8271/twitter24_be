@@ -222,8 +222,18 @@ class GlobalFeedsController < ApplicationController
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
   def index
-    feeds = GlobalFeed.order(created_at: :desc)
+    # scope=my → directly return current user's posts, skip all filters
+    if params[:scope] == "my"
+      feeds = GlobalFeed.where(user_id: current_user.id).order(created_at: :desc)
+      if params[:type].present?
+        feeds = feeds.where(feed_type: params[:type])
+      end
+      return render json: feeds, each_serializer: GlobalFeedSerializer, scope: current_user
+    end
 
+    feeds = GlobalFeed.where.not(user_id: current_user.id).order(created_at: :desc)
+
+    # 1) TYPE filter (global/local)
     if params[:type].present?
       unless %w[global local].include?(params[:type])
         return render json: { error: "Invalid type" }, status: :bad_request
@@ -231,18 +241,87 @@ class GlobalFeedsController < ApplicationController
       feeds = feeds.where(feed_type: params[:type])
     end
 
-    if params[:scope] == "my"
-      feeds = feeds.where(user_id: current_user.id)
-    else
-      feeds = feeds.where.not(user_id: current_user.id)
-    end
-
+    # 3) SEARCH filter
     if params[:q].present?
       like = "%#{params[:q].downcase}%"
       feeds = feeds.where(
         "LOWER(title) LIKE :q OR LOWER(description) LIKE :q OR LOWER(category) LIKE :q OR LOWER(address) LIKE :q",
         q: like
       )
+    end
+
+    # 4) CATEGORY filter (comma-separated list, e.g. "Food & Dining,Events")
+    if params[:categories].present?
+      cats = params[:categories].split(",").map(&:strip).reject(&:blank?)
+      feeds = feeds.where(category: cats) if cats.any?
+    end
+
+    # 5) POST TYPE filter (text / image / video)
+    if params[:post_type].present?
+      case params[:post_type]
+      when "image"
+        feeds = feeds.joins(media_attachments: :blob)
+                     .where("active_storage_blobs.content_type LIKE 'image/%'")
+                     .distinct
+      when "video"
+        feeds = feeds.joins(media_attachments: :blob)
+                     .where("active_storage_blobs.content_type LIKE 'video/%'")
+                     .distinct
+      when "text"
+        feeds = feeds.where.not(id: GlobalFeed.joins(:media_attachments).select(:id))
+      end
+    end
+
+    # 6) LOCATION filter
+    if params[:lat].present? && params[:lng].present?
+      user_lat = params[:lat].to_f
+      user_lng = params[:lng].to_f
+      distance_sql = "(6371 * acos(LEAST(1.0, cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))))"
+
+      if params[:type] == "local"
+        # Local feeds: show only posts whose reach_distance covers the user's location
+        # i.e., distance(user, post) <= post.reach_distance
+        feeds = feeds.where("latitude IS NOT NULL AND longitude IS NOT NULL AND reach_distance IS NOT NULL")
+                     .where(
+                       "#{distance_sql} <= reach_distance",
+                       user_lat, user_lng, user_lat
+                     )
+
+        # Optional: user can further restrict with a max radius (from filter card/slider)
+        if params[:radius_km].present?
+          feeds = feeds.where("#{distance_sql} <= ?", user_lat, user_lng, user_lat, params[:radius_km].to_f)
+        end
+      elsif params[:radius_km].present?
+        # Global feeds: optional max radius filter
+        feeds = feeds.where("latitude IS NOT NULL AND longitude IS NOT NULL")
+                     .where("#{distance_sql} <= ?", user_lat, user_lng, user_lat, params[:radius_km].to_f)
+      end
+
+      # Min radius filter (range slider — exclude posts closer than X km)
+      if params[:min_radius_km].present? && params[:min_radius_km].to_f > 1
+        feeds = feeds.where("latitude IS NOT NULL AND longitude IS NOT NULL")
+                     .where("#{distance_sql} >= ?", user_lat, user_lng, user_lat, params[:min_radius_km].to_f)
+      end
+    end
+
+    # 7) SORT BY
+    sort_param = params[:sort_by].to_s
+    if %w[nearest_first farthest_first].include?(sort_param) && params[:lat].present? && params[:lng].present?
+      user_lat  = params[:lat].to_f
+      user_lng  = params[:lng].to_f
+      direction = sort_param == "nearest_first" ? "ASC" : "DESC"
+      feeds = feeds.where("latitude IS NOT NULL AND longitude IS NOT NULL")
+                   .reorder(Arel.sql(
+                     "(6371 * acos(LEAST(1.0, cos(radians(#{user_lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(#{user_lng})) + sin(radians(#{user_lat})) * sin(radians(latitude))))) #{direction}"
+                   ))
+    elsif sort_param == "oldest_first"
+      feeds = feeds.reorder(created_at: :asc)
+    elsif sort_param == "most_popular"
+      feeds = feeds.reorder(
+        Arel.sql("(SELECT COUNT(*) FROM likes WHERE likes.likeable_id = global_feeds.id AND likes.likeable_type = 'GlobalFeed') DESC")
+      )
+    else
+      feeds = feeds.reorder(created_at: :desc)
     end
 
     render json: feeds,

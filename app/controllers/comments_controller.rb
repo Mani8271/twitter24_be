@@ -8,7 +8,7 @@ class CommentsController < ApplicationController
                           .where(parent_id: nil)
                           .includes(:user, replies: :user)
 
-    render json: comments.map { |c| serialize_comment(c) }
+    render json: comments, each_serializer: CommentSerializer, scope: current_user
   end
 
   def create
@@ -21,7 +21,8 @@ class CommentsController < ApplicationController
     )
 
     if comment.save
-      render json: serialize_comment(comment), status: :created
+      comment = Comment.includes(:user, replies: :user).find(comment.id)
+      render json: comment, serializer: CommentSerializer, scope: current_user, status: :created
     else
       render json: { errors: comment.errors.full_messages }, status: :unprocessable_entity
     end
@@ -47,21 +48,5 @@ class CommentsController < ApplicationController
     raise ActiveRecord::RecordNotFound unless allowed_types.include?(type)
 
     type.constantize.find(id)
-  end
-
-  def serialize_comment(comment)
-    {
-      id: comment.id,
-      user_id: comment.user_id,
-      body: comment.body,
-      parent_id: comment.parent_id,
-      created_at: comment.created_at,
-      updated_at: comment.updated_at,
-      user: {
-        id: comment.user.id,
-        name: comment.user.name
-      },
-      replies: comment.replies.map { |r| serialize_comment(r) }
-    }
   end
 end
