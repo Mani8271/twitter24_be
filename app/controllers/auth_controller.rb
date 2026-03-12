@@ -47,6 +47,10 @@ class AuthController < ApplicationController
       return render json: { error: "Invalid Phone Number or Password" }, status: :unauthorized
     end
 
+    if user.deleted?
+      return render json: { error: "This account has been deleted." }, status: :forbidden
+    end
+
     token = JsonWebToken.encode({ user_id: user.id })
     exp = 1.year.from_now.strftime("%m-%d-%Y %H:%M")
 

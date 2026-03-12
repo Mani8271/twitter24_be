@@ -41,6 +41,11 @@ class UsersController < ApplicationController
     render json: businesses, each_serializer: BusinessSerializer
   end
 
+  def delete_account
+    current_user.soft_delete!
+    render json: { message: "Account deleted successfully." }, status: :ok
+  end
+
   private
 
   def user_params

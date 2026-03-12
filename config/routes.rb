@@ -18,6 +18,7 @@ Rails.application.routes.draw do
    put "/me", to: "users#update_me"
    put "/change_password", to: "users#change_password"
    get "/followed_businesses", to: "users#followed_businesses"
+   delete "/me", to: "users#delete_account"
   
   resources :global_feeds
 
@@ -50,6 +51,8 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :comments, only: [:index, :create, :destroy]
   resource :view, only: [:create]              # singular is okay
   resources :businesses, only: [:index, :show]
+  patch  "/businesses/online_status", to: "businesses#toggle_online"
+  delete "/businesses/images/:blob_id", to: "businesses#delete_image"
   resources :reviews, only: [:index, :create]
   post "/follow", to: "follows#create"
   resources :offers

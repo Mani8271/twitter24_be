@@ -1,6 +1,16 @@
 class User < ApplicationRecord
   has_secure_password
   has_one_attached :profile_picture
+
+  default_scope { where(deleted_at: nil) }
+
+  def soft_delete!
+    update_column(:deleted_at, Time.current)
+  end
+
+  def deleted?
+    deleted_at.present?
+  end
   has_many :live_locations, dependent: :destroy
   validates :name, presence: true
   validates :phone_number, presence: true, uniqueness: { case_sensitive: false }
@@ -43,16 +53,11 @@ has_one :live_location, dependent: :destroy
       errors.add(:business, "must exist for business accounts")
     end
   end
-   def self.ransackable_attributes(auth_object = nil)
-    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
+  def self.ransackable_attributes(auth_object = nil)
+    %w[id name email phone_number account_type status created_at updated_at]
   end
-    def self.ransackable_associations(auth_object = nil)
-    ["business", "live_location", "live_locations", "onboarding_progress", "profile_picture_attachment", "profile_picture_blob"]
-  end
-    def self.ransackable_attributes(auth_object = nil)
-    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
-  end
-    def self.ransackable_attributes(auth_object = nil)
-    ["blob_id", "created_at", "id", "id_value", "name", "record_id", "record_type"]
+
+  def self.ransackable_associations(auth_object = nil)
+    %w[business live_location live_locations onboarding_progress profile_picture_attachment profile_picture_blob]
   end
 end

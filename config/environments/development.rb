@@ -63,9 +63,8 @@ Rails.application.configure do
   config.assets.quiet = true
 
 
-  # Rails.application.routes.default_url_options[:host] = 'http://localhost:3000'
- Rails.application.routes.default_url_options[:host] = "twitter24-be.onrender.com"
-Rails.application.routes.default_url_options[:protocol] = "https"
+  # URL host is set dynamically from the incoming request in ApplicationController#set_default_url_host
+  # This works correctly for both localhost and ngrok tunnels without any manual changes.
 
 
 
@@ -80,4 +79,5 @@ Rails.application.routes.default_url_options[:protocol] = "https"
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+  config.hosts.clear
 end

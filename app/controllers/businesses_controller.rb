@@ -62,6 +62,33 @@ end
   end
   
 
+  # =========================================================
+  # 🔄 TOGGLE ONLINE STATUS
+  # PATCH /businesses/online_status
+  # =========================================================
+  def toggle_online
+    business = current_user.business
+    return render json: { error: "Business not found" }, status: :not_found unless business
+
+    business.update!(is_online: !business.is_online)
+    render json: { is_online: business.is_online }, status: :ok
+  end
+
+  # =========================================================
+  # 🗑️ DELETE GALLERY IMAGE
+  # DELETE /businesses/images/:blob_id
+  # =========================================================
+  def delete_image
+    business = current_user.business
+    return render json: { error: "Business not found" }, status: :not_found unless business
+
+    attachment = business.shop_images_attachments.find_by(blob_id: params[:blob_id])
+    return render json: { error: "Image not found" }, status: :not_found unless attachment
+
+    attachment.purge
+    render json: { message: "Image deleted" }, status: :ok
+  end
+
   private
 
   # =========================================================

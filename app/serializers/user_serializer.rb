@@ -10,6 +10,7 @@ class UserSerializer < ActiveModel::Serializer
              :profile_picture,
              :currency_pref,
              :is_online,
+             :is_subscription_completed,
              :account_type,
              :email_verified,
              :phone_verified,
@@ -62,6 +63,10 @@ class UserSerializer < ActiveModel::Serializer
       object.profile_picture,
       host: ENV["APP_HOST"] || "twitter24-be.onrender.com"
     )
+  end
+
+  def is_online
+    object.business&.is_online || false
   end
 
   def followed_businesses_count

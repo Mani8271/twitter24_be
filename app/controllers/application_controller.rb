@@ -3,6 +3,16 @@ class ApplicationController < ActionController::Base
 
   before_action :authorize_request, unless: :skip_jwt_auth?
 
+  # Dynamically set URL host from the actual incoming request.
+  # This ensures ActiveStorage URLs always match the server being hit
+  # (ngrok in dev, render.com in prod) — no hardcoded host needed.
+  before_action :set_default_url_host
+
+  def set_default_url_host
+    Rails.application.routes.default_url_options[:host]     = request.host_with_port
+    Rails.application.routes.default_url_options[:protocol] = request.protocol.chomp("://")
+  end
+
   attr_reader :current_user
 
   def not_found

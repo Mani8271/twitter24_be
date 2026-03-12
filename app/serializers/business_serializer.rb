@@ -16,14 +16,15 @@ class BusinessSerializer < ActiveModel::Serializer
              :global_feeds_count,
              :local_feeds_count,
              :is_open,
+             :is_online,
              :open_days,
              :open_time,
              :phone,
              :address,
              :distance_km,
              :images,
-              :favorites_count,
-               :favorited_by_me
+             :favorites_count,
+             :favorited_by_me
 
   # =================================
   # COUNTS
@@ -107,16 +108,12 @@ end
   # =================================
   def images
     return {} unless object.profile_picture.attached? || object.shop_images.attached?
-  
-    host = ENV["APP_HOST"] || "twitter24-be.onrender.com"
-  
+
     {
-      profile_picture: object.profile_picture.attached? ?
-        rails_blob_url(object.profile_picture, host: host) :
-        nil,
-  
+      profile_picture: object.profile_picture.attached? ? url_for(object.profile_picture) : nil,
+
       gallery: object.shop_images.map do |img|
-        rails_blob_url(img, host: host)
+        { id: img.blob.id, url: url_for(img) }
       end
     }
   end

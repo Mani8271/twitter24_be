@@ -37,7 +37,11 @@ class Business < ApplicationRecord
   end
   
   def self.ransackable_attributes(auth_object = nil)
-    ["about", "category", "created_at", "id", "id_value", "name", "products_services", "status", "updated_at", "user_id", "website", "year_established"]
+    %w[id name category status about year_established website user_id created_at updated_at]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    %w[user business_contact business_location business_hours business_document]
   end
 end
 
