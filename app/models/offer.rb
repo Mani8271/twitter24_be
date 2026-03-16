@@ -11,6 +11,15 @@ class Offer < ApplicationRecord
   scope :active, -> { where("valid_till IS NULL OR valid_till >= ?", Time.current) }
   scope :by_type, ->(type) { where(offer_type: type) if type.present? }
 
+  def self.ransackable_attributes(auth_object = nil)
+    %w[address created_at description disappearing_days id latitude links
+       longitude offer_type reach_distance tags title updated_at user_id valid_till]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    %w[user]
+  end
+
   private
 
   def validate_links_format

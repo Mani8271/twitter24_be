@@ -56,6 +56,7 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :reviews, only: [:index, :create]
   post "/follow", to: "follows#create"
   resources :offers
+  resources :jobs
 
 
 
