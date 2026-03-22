@@ -94,6 +94,7 @@ class JobsController < ApplicationController
       :post_type,
       :tags,
       :disappearing_days,
+      :image,
       links: [:button_name, :url]
     )
   end

@@ -1,5 +1,6 @@
 class Job < ApplicationRecord
   belongs_to :user
+  has_one_attached :image
 
   validates :job_title, :description, presence: true
   validates :job_type, inclusion: { in: %w[full_time part_time contract internship freelance] }, allow_blank: true
