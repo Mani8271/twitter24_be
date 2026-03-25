@@ -18,7 +18,7 @@ class JobSerializer < ActiveModel::Serializer
              :disappearing_days,
              :user_id,
              :is_my_post,
-             :image_url,
+             :image_urls,
              :created_at,
              :updated_at
 
@@ -30,8 +30,10 @@ class JobSerializer < ActiveModel::Serializer
     object.salary&.to_s
   end
 
-  def image_url
-    return nil unless object.image.attached?
-    rails_blob_url(object.image, host: ENV["APP_HOST"] || "https://twitter24-be.onrender.com")
+  def image_urls
+    return [] unless object.images.attached?
+    object.images.map do |img|
+      rails_blob_url(img, host: ENV["APP_HOST"] || "https://twitter24-be.onrender.com")
+    end
   end
 end
