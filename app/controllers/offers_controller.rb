@@ -16,6 +16,7 @@ class OffersController < ApplicationController
       if params[:my].present? && params[:my] == "true"
         offers = offers.where(user_id: current_user.id)
       end
+      offers = offers.where(user_id: params[:user_id]) if params[:user_id].present?
   
       render json: offers
     end

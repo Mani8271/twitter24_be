@@ -15,6 +15,7 @@ class JobsController < ApplicationController
     jobs = Job.all
 
     jobs = jobs.where(user_id: current_user.id) if params[:my] == "true"
+    jobs = jobs.where(user_id: params[:user_id]) if params[:user_id].present?
     jobs = jobs.where(post_type: params[:post_type]) if params[:post_type].present?
     jobs = jobs.by_search(params[:search])
 

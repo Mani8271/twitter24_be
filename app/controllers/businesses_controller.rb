@@ -14,6 +14,8 @@ class BusinessesController < ApplicationController
                 .where(status: "approved")
                 if params[:mine].to_s.downcase == "true"
                   businesses = businesses.where(user_id: current_user.id)
+                else
+                  businesses = businesses.where.not(user_id: current_user.id)
                 end            
   # ✅ Filter for favorites if query param is present
   if params[:favourites].to_s.downcase == "true"

@@ -3,6 +3,7 @@ class BusinessSerializer < ActiveModel::Serializer
   include Rails.application.routes.url_helpers
 
   attributes :id,
+             :user_id,
              :name,
              :category,
              :about,
@@ -12,6 +13,8 @@ class BusinessSerializer < ActiveModel::Serializer
              :rating,
              :reviews_count,
              :followers_count,
+             :is_online,
+             :jobs_count,
              :followed_by_me,
              :global_feeds_count,
              :local_feeds_count,
@@ -31,6 +34,10 @@ class BusinessSerializer < ActiveModel::Serializer
   # =================================
   def rating
     object.average_rating || 0
+  end
+
+  def jobs_count
+    object.user.jobs.count
   end
 
   def reviews_count

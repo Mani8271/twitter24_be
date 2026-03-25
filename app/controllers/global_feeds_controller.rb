@@ -222,6 +222,13 @@ class GlobalFeedsController < ApplicationController
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
   def index
+    # user_id param → return that user's posts directly
+    if params[:user_id].present?
+      feeds = GlobalFeed.where(user_id: params[:user_id]).order(created_at: :desc)
+      feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
+      return render json: feeds, each_serializer: GlobalFeedSerializer, scope: current_user
+    end
+
     # scope=my → directly return current user's posts, skip all filters
     if params[:scope] == "my"
       feeds = GlobalFeed.where(user_id: current_user.id).order(created_at: :desc)
