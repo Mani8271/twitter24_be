@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Twitter24 — Discover What's Around You</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary: #1d9bf0;
+      --primary-dark: #0d8ae0;
+      --secondary: #0f1419;
+      --accent: #ffd700;
+      --surface: #16181c;
+      --surface2: #1e2128;
+      --border: #2f3336;
+      --text-muted: #71767b;
+      --text-light: #e7e9ea;
+      --gradient-1: linear-gradient(135deg, #1d9bf0 0%, #6c47ff 100%);
+      --gradient-2: linear-gradient(135deg, #ff6b6b 0%, #ffd700 100%);
+      --gradient-3: linear-gradient(135deg, #00c9a7 0%, #1d9bf0 100%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0c0f;
+      color: var(--text-light);
+      overflow-x: hidden;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      background: rgba(10, 12, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar-brand {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--primary) !important;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-brand .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient-1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .nav-link {
+      color: var(--text-light) !important;
+      font-weight: 500;
+      font-size: 0.95rem;
+      padding: 6px 14px !important;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover { background: var(--surface2); color: var(--primary) !important; }
+
+    .btn-nav-signin {
+      background: transparent;
+      border: 1.5px solid var(--primary);
+      color: var(--primary) !important;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 7px 22px !important;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-signin:hover { background: var(--primary); color: #fff !important; }
+
+    .btn-nav-signup {
+      background: var(--primary);
+      border: none;
+      color: #fff !important;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 7px 22px !important;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-signup:hover { background: var(--primary-dark); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 80px 0;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(29, 155, 240, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(108, 71, 255, 0.10) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(29, 155, 240, 0.12);
+      border: 1px solid rgba(29, 155, 240, 0.3);
+      color: var(--primary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 999px;
+      margin-bottom: 24px;
+      letter-spacing: 0.3px;
+    }
+
+    .hero-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 24px;
+    }
+
+    .hero-title .highlight {
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 520px;
+      margin-bottom: 40px;
+      font-weight: 400;
+    }
+
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .btn-primary-hero {
+      background: var(--gradient-1);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 999px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 30px rgba(29, 155, 240, 0.35);
+      text-decoration: none;
+    }
+
+    .btn-primary-hero:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(29, 155, 240, 0.5);
+      color: #fff;
+    }
+
+    .btn-outline-hero {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-light);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 999px;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+
+    .btn-outline-hero:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 56px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .hero-stat-number {
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .hero-stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ── HERO VISUAL ── */
+    .hero-visual {
+      position: relative;
+      height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone-mockup {
+      width: 280px;
+      background: var(--surface);
+      border-radius: 40px;
+      border: 2px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.04);
+      position: relative;
+      z-index: 2;
+    }
+
+    .phone-notch {
+      height: 32px;
+      background: var(--secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone-notch-bar {
+      width: 80px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+    }
+
+    .phone-screen {
+      padding: 16px;
+      min-height: 480px;
+      background: var(--surface);
+    }
+
+    .phone-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .phone-logo {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+
+    .phone-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--gradient-1);
+    }
+
+    .feed-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .feed-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .feed-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .feed-name {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    .feed-time {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+    }
+
+    .feed-text {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .feed-image-placeholder {
+      height: 60px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .feed-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .feed-action {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .badge-local {
+      font-size: 0.55rem;
+      background: rgba(0, 201, 167, 0.15);
+      color: #00c9a7;
+      border: 1px solid rgba(0, 201, 167, 0.3);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .badge-global {
+      font-size: 0.55rem;
+      background: rgba(29, 155, 240, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(29, 155, 240, 0.3);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* Floating cards around phone */
+    .float-card {
+      position: absolute;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      z-index: 3;
+    }
+
+    .float-card-1 {
+      top: 60px;
+      right: 0;
+      width: 170px;
+    }
+
+    .float-card-2 {
+      bottom: 100px;
+      left: -10px;
+      width: 160px;
+    }
+
+    .float-card-3 {
+      top: 200px;
+      left: -20px;
+      width: 145px;
+    }
+
+    .float-card-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .float-card-value {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+
+    .float-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    /* Glow circles */
+    .glow-circle {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .glow-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; right: -100px; }
+    .glow-2 { width: 300px; height: 300px; background: #6c47ff; bottom: -50px; left: -50px; }
+
+    /* ── FEATURES ── */
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    .features-section {
+      padding: 100px 0;
+      background: linear-gradient(180deg, #0a0c0f 0%, #0d1117 100%);
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      height: 100%;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover { transform: translateY(-6px); border-color: rgba(29, 155, 240, 0.3); }
+    .feature-card:hover::before { opacity: 1; }
+
+    .fc-blue::before { background: var(--gradient-1); }
+    .fc-green::before { background: var(--gradient-3); }
+    .fc-orange::before { background: var(--gradient-2); }
+    .fc-purple::before { background: linear-gradient(135deg, #6c47ff, #1d9bf0); }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .fi-blue { background: rgba(29, 155, 240, 0.15); color: var(--primary); }
+    .fi-green { background: rgba(0, 201, 167, 0.15); color: #00c9a7; }
+    .fi-orange { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+    .fi-purple { background: rgba(108, 71, 255, 0.15); color: #6c47ff; }
+    .fi-yellow { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
+    .fi-pink { background: rgba(255, 107, 156, 0.15); color: #ff6b9d; }
+
+    .feature-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-light);
+    }
+
+    .feature-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how-section {
+      padding: 100px 0;
+      background: #0a0c0f;
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-1);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .step-connector {
+      width: 2px;
+      flex: 1;
+      background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
+      margin: 8px auto;
+      min-height: 40px;
+    }
+
+    .step-content { padding-left: 20px; }
+
+    .step-title {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── BUSINESS SECTION ── */
+    .business-section {
+      padding: 100px 0;
+      background: linear-gradient(180deg, #0d1117 0%, #0a0c0f 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .business-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(29, 155, 240, 0.06) 0%, transparent 70%);
+    }
+
+    .biz-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.3s;
+      margin-bottom: 16px;
+    }
+
+    .biz-card:hover { border-color: rgba(29, 155, 240, 0.3); transform: translateX(6px); }
+
+    .biz-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .biz-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      margin-bottom: 2px;
+    }
+
+    .biz-category {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .biz-rating {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #ffd700;
+    }
+
+    .biz-distance {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* ── API ENDPOINTS ── */
+    .api-section {
+      padding: 100px 0;
+      background: #0a0c0f;
+    }
+
+    .endpoint-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+
+    .endpoint-item:hover { border-color: rgba(29,155,240,0.3); }
+
+    .method-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'Poppins', sans-serif;
+      min-width: 52px;
+      text-align: center;
+    }
+
+    .method-get { background: rgba(0, 201, 167, 0.15); color: #00c9a7; }
+    .method-post { background: rgba(29, 155, 240, 0.15); color: var(--primary); }
+    .method-put { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
+    .method-delete { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+
+    .endpoint-path {
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      flex: 1;
+    }
+
+    .endpoint-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 120px 0;
+      background: linear-gradient(135deg, #0d1117 0%, #0a0c0f 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(29, 155, 240, 0.1) 0%, transparent 70%);
+    }
+
+    .cta-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+    }
+
+    .cta-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 60px 0 32px;
+    }
+
+    .footer-brand {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+
+    .footer-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 260px;
+    }
+
+    .footer-heading {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text-light);
+      margin-bottom: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-link {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: color 0.2s;
+    }
+
+    .footer-link:hover { color: var(--primary); }
+
+    .footer-divider {
+      border-color: var(--border);
+      margin: 40px 0 24px;
+    }
+
+    .footer-copy {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── DIVIDER ── */
+    .gradient-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    /* ── PILL TAGS ── */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin: 4px;
+    }
+
+    .pill-blue { background: rgba(29,155,240,0.12); color: var(--primary); border: 1px solid rgba(29,155,240,0.2); }
+    .pill-green { background: rgba(0,201,167,0.12); color: #00c9a7; border: 1px solid rgba(0,201,167,0.2); }
+    .pill-purple { background: rgba(108,71,255,0.12); color: #6c47ff; border: 1px solid rgba(108,71,255,0.2); }
+    .pill-yellow { background: rgba(255,215,0,0.12); color: #ffd700; border: 1px solid rgba(255,215,0,0.2); }
+    .pill-red { background: rgba(255,107,107,0.12); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.2); }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════ -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <div class="logo-icon"><i class="bi bi-broadcast"></i></div>
+      Twitter24
+    </a>
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="bi bi-list text-white fs-4"></i>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav mx-auto gap-1">
+        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="#how-it-works">How it Works</a></li>
+        <li class="nav-item"><a class="nav-link" href="#for-business">For Business</a></li>
+        <li class="nav-item"><a class="nav-link" href="#api">API</a></li>
+      </ul>
+
+      <div class="d-flex gap-2 mt-3 mt-lg-0">
+        <a href="/admin" class="nav-link btn-nav-signin">Admin</a>
+        <a href="#" class="nav-link btn-nav-signup">Get Started</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     HERO
+═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- Left Content -->
+      <div class="col-lg-6">
+        <div class="hero-badge">
+          <i class="bi bi-lightning-charge-fill"></i>
+          Location-Aware Social Platform
+        </div>
+
+        <h1 class="hero-title">
+          Discover What's <br />
+          <span class="highlight">Happening Around</span><br />
+          You Right Now
+        </h1>
+
+        <p class="hero-subtitle">
+          Twitter24 connects people with local businesses, feeds, jobs, and offers — all tailored to your location in real time.
+        </p>
+
+        <div class="hero-actions">
+          <a href="/admin" class="btn-primary-hero">
+            <i class="bi bi-shield-lock-fill me-2"></i>Admin Dashboard
+          </a>
+          <a href="#features" class="btn-outline-hero">
+            <i class="bi bi-arrow-down me-2"></i>Explore Features
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-number">6-Step</div>
+            <div class="hero-stat-label">Business Onboarding</div>
+          </div>
+          <div>
+            <div class="hero-stat-number">50km</div>
+            <div class="hero-stat-label">Max Reach Radius</div>
+          </div>
+          <div>
+            <div class="hero-stat-number">JWT</div>
+            <div class="hero-stat-label">Secure Auth</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Visual -->
+      <div class="col-lg-6">
+        <div class="hero-visual">
+          <div class="glow-circle glow-1"></div>
+          <div class="glow-circle glow-2"></div>
+
+          <!-- Floating Cards -->
+          <div class="float-card float-card-1">
+            <div class="float-card-icon fi-green"><i class="bi bi-geo-alt-fill"></i></div>
+            <div class="float-card-title">Nearby Businesses</div>
+            <div class="float-card-value">24 found</div>
+          </div>
+
+          <div class="float-card float-card-3">
+            <div class="float-card-icon fi-yellow"><i class="bi bi-star-fill"></i></div>
+            <div class="float-card-title">Reviews Today</div>
+            <div class="float-card-value">138</div>
+          </div>
+
+          <div class="float-card float-card-2">
+            <div class="float-card-icon fi-purple"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="float-card-title">Active Jobs</div>
+            <div class="float-card-value">56 local</div>
+          </div>
+
+          <!-- Phone Mockup -->
+          <div class="phone-mockup">
+            <div class="phone-notch"><div class="phone-notch-bar"></div></div>
+            <div class="phone-screen">
+              <div class="phone-header">
+                <div class="phone-logo">Twitter24</div>
+                <div class="phone-avatar"></div>
+              </div>
+
+              <!-- Feed Card 1 -->
+              <div class="feed-card">
+                <div class="feed-card-header">
+                  <div class="feed-avatar" style="background: linear-gradient(135deg,#ff6b6b,#ffd700);"></div>
+                  <div>
+                    <div class="feed-name">Spice Garden 🍛</div>
+                    <div class="feed-time">2 min ago · <span class="badge-local">Local</span></div>
+                  </div>
+                </div>
+                <div class="feed-image-placeholder" style="background: linear-gradient(135deg, #ff6b6b22, #ffd70022); border: 1px solid #333;"></div>
+                <div class="feed-text">Grand reopening this weekend! 20% off on all biryani orders.</div>
+                <div class="feed-actions">
+                  <div class="feed-action"><i class="bi bi-heart"></i> 48</div>
+                  <div class="feed-action"><i class="bi bi-chat"></i> 12</div>
+                  <div class="feed-action"><i class="bi bi-eye"></i> 210</div>
+                </div>
+              </div>
+
+              <!-- Feed Card 2 -->
+              <div class="feed-card">
+                <div class="feed-card-header">
+                  <div class="feed-avatar" style="background: linear-gradient(135deg,#1d9bf0,#6c47ff);"></div>
+                  <div>
+                    <div class="feed-name">TechHub Cowork</div>
+                    <div class="feed-time">15 min · <span class="badge-global">Global</span></div>
+                  </div>
+                </div>
+                <div class="feed-text">Hiring: React Native dev. 3yrs exp. ₹8-12 LPA. Apply now!</div>
+                <div class="feed-actions">
+                  <div class="feed-action"><i class="bi bi-heart"></i> 91</div>
+                  <div class="feed-action"><i class="bi bi-chat"></i> 23</div>
+                  <div class="feed-action"><i class="bi bi-share"></i> 8</div>
+                </div>
+              </div>
+
+              <!-- Feed Card 3 -->
+              <div class="feed-card">
+                <div class="feed-card-header">
+                  <div class="feed-avatar" style="background: linear-gradient(135deg,#00c9a7,#1d9bf0);"></div>
+                  <div>
+                    <div class="feed-name">City Events</div>
+                    <div class="feed-time">1h · <span class="badge-local">Local</span></div>
+                  </div>
+                </div>
+                <div class="feed-text">Music festival tonight at Town Square. Free entry before 7 PM!</div>
+                <div class="feed-actions">
+                  <div class="feed-action"><i class="bi bi-heart-fill text-danger"></i> 204</div>
+                  <div class="feed-action"><i class="bi bi-chat"></i> 67</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
+     FEATURES
+═══════════════════════════════════════ -->
+<section class="features-section" id="features">
+  <div class="container">
+
+    <div class="text-center mb-5 fade-up">
+      <div class="section-label">Platform Features</div>
+      <h2 class="section-title">Everything in One Place</h2>
+      <p class="section-desc mx-auto">
+        From social feeds to business discovery — Twitter24 is built for your local world.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4 fade-up">
+        <div class="feature-card fc-blue">
+          <div class="feature-icon fi-blue"><i class="bi bi-globe2"></i></div>
+          <div class="feature-title">Global & Local Feeds</div>
+          <div class="feature-desc">Post globally or target a specific radius. Reach the right audience with geo-tagged content and location-based discovery.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 fade-up" style="transition-delay: 0.1s">
+        <div class="feature-card fc-green">
+          <div class="feature-icon fi-green"><i class="bi bi-shop"></i></div>
+          <div class="feature-title">Business Discovery</div>
+          <div class="feature-desc">Find businesses near you with real-time open/close status, hours, ratings, and distance. Follow businesses you love.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 fade-up" style="transition-delay: 0.2s">
+        <div class="feature-card fc-orange">
+          <div class="feature-icon fi-orange"><i class="bi bi-briefcase-fill"></i></div>
+          <div class="feature-title">Jobs Board</div>
+          <div class="feature-desc">Browse jobs by type, salary, experience, and location. Filter by full-time, part-time, freelance, internship, or contract.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 fade-up" style="transition-delay: 0.1s">
+        <div class="feature-card fc-purple">
+          <div class="feature-icon fi-purple"><i class="bi bi-tag-fill"></i></div>
+          <div class="feature-title">Offers & Promotions</div>
+          <div class="feature-desc">Businesses post time-limited local or global offers. Users discover deals in their area before they expire.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 fade-up" style="transition-delay: 0.2s">
+        <div class="feature-card fc-blue">
+          <div class="feature-icon fi-yellow"><i class="bi bi-geo-alt-fill"></i></div>
+          <div class="feature-title">Location Intelligence</div>
+          <div class="feature-desc">Reach analytics, live location tracking, reverse geocoding, and distance-based filtering — all powered by PostGIS.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 fade-up" style="transition-delay: 0.3s">
+        <div class="feature-card fc-green">
+          <div class="feature-icon fi-pink"><i class="bi bi-phone-fill"></i></div>
+          <div class="feature-title">OTP Authentication</div>
+          <div class="feature-desc">Phone-based signup with OTP verification. Secure JWT tokens for API access with a 1-year expiry and soft-delete accounts.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pills -->
+    <div class="text-center mt-5 fade-up">
+      <span class="pill pill-blue"><i class="bi bi-heart-fill"></i> Likes</span>
+      <span class="pill pill-green"><i class="bi bi-chat-fill"></i> Comments & Replies</span>
+      <span class="pill pill-purple"><i class="bi bi-eye-fill"></i> View Tracking</span>
+      <span class="pill pill-yellow"><i class="bi bi-star-fill"></i> Reviews & Ratings</span>
+      <span class="pill pill-red"><i class="bi bi-person-plus-fill"></i> Follow Businesses</span>
+      <span class="pill pill-blue"><i class="bi bi-image-fill"></i> Media Uploads</span>
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════ -->
+<section class="how-section" id="how-it-works">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+
+      <div class="col-lg-5 fade-up">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Up and running in minutes</h2>
+        <p class="section-desc">
+          Simple onboarding, powerful features. Whether you're a user or a business, getting started is seamless.
+        </p>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="row g-0">
+          <div class="col-auto d-flex flex-column align-items-center pe-3">
+            <div class="step-number">1</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="col step-content pb-4 fade-up">
+            <div class="step-title">Sign Up with Phone</div>
+            <div class="step-desc">Register using your phone number. Verify via OTP and set your password. Choose between user or business account.</div>
+          </div>
+        </div>
+
+        <div class="row g-0">
+          <div class="col-auto d-flex flex-column align-items-center pe-3">
+            <div class="step-number">2</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="col step-content pb-4 fade-up" style="transition-delay:0.1s">
+            <div class="step-title">Set Your Location</div>
+            <div class="step-desc">Share your live location to discover nearby businesses, local feeds, job listings, and offers within your area.</div>
+          </div>
+        </div>
+
+        <div class="row g-0">
+          <div class="col-auto d-flex flex-column align-items-center pe-3">
+            <div class="step-number">3</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="col step-content pb-4 fade-up" style="transition-delay:0.2s">
+            <div class="step-title">Explore Your Feed</div>
+            <div class="step-desc">Browse global and local feeds, filter by category, media type, or distance. Like, comment, and engage with content.</div>
+          </div>
+        </div>
+
+        <div class="row g-0">
+          <div class="col-auto d-flex flex-column align-items-center pe-3">
+            <div class="step-number">4</div>
+          </div>
+          <div class="col step-content fade-up" style="transition-delay:0.3s">
+            <div class="step-title">Connect & Grow</div>
+            <div class="step-desc">Follow businesses, apply for jobs, grab offers, and leave reviews. Businesses can post content and track their reach analytics.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
+     FOR BUSINESS
+═══════════════════════════════════════ -->
+<section class="business-section" id="for-business">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+
+      <div class="col-lg-5 fade-up">
+        <!-- Business cards demo -->
+        <div class="biz-card">
+          <div class="biz-avatar" style="background: rgba(255,107,107,0.15); color:#ff6b6b;">🍛</div>
+          <div>
+            <div class="biz-name">Spice Garden Restaurant</div>
+            <div class="biz-category">Food & Beverages · 0.8 km away</div>
+          </div>
+          <div class="text-end">
+            <div class="biz-rating"><i class="bi bi-star-fill"></i> 4.8</div>
+            <div class="biz-distance">Open Now</div>
+          </div>
+        </div>
+
+        <div class="biz-card">
+          <div class="biz-avatar" style="background: rgba(29,155,240,0.15); color:var(--primary);">💻</div>
+          <div>
+            <div class="biz-name">TechHub Coworking</div>
+            <div class="biz-category">Workspace · 1.2 km away</div>
+          </div>
+          <div class="text-end">
+            <div class="biz-rating"><i class="bi bi-star-fill"></i> 4.6</div>
+            <div class="biz-distance">Open Now</div>
+          </div>
+        </div>
+
+        <div class="biz-card">
+          <div class="biz-avatar" style="background: rgba(0,201,167,0.15); color:#00c9a7;">💊</div>
+          <div>
+            <div class="biz-name">HealthPlus Pharmacy</div>
+            <div class="biz-category">Healthcare · 2.1 km away</div>
+          </div>
+          <div class="text-end">
+            <div class="biz-rating"><i class="bi bi-star-fill"></i> 4.9</div>
+            <div class="biz-distance">Closes 10 PM</div>
+          </div>
+        </div>
+
+        <div class="biz-card" style="opacity: 0.5;">
+          <div class="biz-avatar" style="background: rgba(108,71,255,0.15); color:#6c47ff;">📚</div>
+          <div>
+            <div class="biz-name">BookNook Store</div>
+            <div class="biz-category">Retail · 3.5 km away</div>
+          </div>
+          <div class="text-end">
+            <div class="biz-rating" style="color:var(--text-muted);">Closed</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6 offset-lg-1 fade-up">
+        <div class="section-label">For Business</div>
+        <h2 class="section-title">Your Business, <span style="background: var(--gradient-3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip:text;">Discovered Locally</span></h2>
+        <p class="section-desc mb-4">
+          Register your business in 6 simple steps. Set your hours, upload documents, add photos, and start reaching customers in your area.
+        </p>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="feature-icon fi-blue" style="width:36px;height:36px;border-radius:10px;font-size:1rem;flex-shrink:0;"><i class="bi bi-check2"></i></div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Business Profile</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Name, category, about, website</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="feature-icon fi-green" style="width:36px;height:36px;border-radius:10px;font-size:1rem;flex-shrink:0;"><i class="bi bi-clock"></i></div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Business Hours</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">7-day schedule management</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="feature-icon fi-yellow" style="width:36px;height:36px;border-radius:10px;font-size:1rem;flex-shrink:0;"><i class="bi bi-file-earmark-text"></i></div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Documents</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">GSTIN, PAN, FSSAI upload</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <div class="feature-icon fi-purple" style="width:36px;height:36px;border-radius:10px;font-size:1rem;flex-shrink:0;"><i class="bi bi-bar-chart-fill"></i></div>
+              <div>
+                <div style="font-weight:600;font-size:0.9rem;">Reach Analytics</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">Users within 5km–50km radius</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <a href="/admin" class="btn-primary-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-shield-lock-fill"></i> Go to Admin Panel
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
+     API ENDPOINTS
+═══════════════════════════════════════ -->
+<section class="api-section" id="api">
+  <div class="container">
+    <div class="row g-5">
+
+      <div class="col-lg-4 fade-up">
+        <div class="section-label">REST API</div>
+        <h2 class="section-title">Clean API Endpoints</h2>
+        <p class="section-desc">
+          Every feature is accessible via a clean JSON REST API with JWT authentication. Built for mobile apps and web frontends.
+        </p>
+        <div class="mt-4">
+          <div class="pill pill-blue mb-2"><i class="bi bi-lock-fill"></i> JWT Auth</div><br/>
+          <div class="pill pill-green mb-2"><i class="bi bi-braces"></i> JSON Responses</div><br/>
+          <div class="pill pill-purple"><i class="bi bi-geo-fill"></i> Location-Aware</div>
+        </div>
+      </div>
+
+      <div class="col-lg-8 fade-up">
+        <div class="endpoint-item">
+          <span class="method-badge method-post">POST</span>
+          <span class="endpoint-path">/signup</span>
+          <span class="endpoint-desc">Create account</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-post">POST</span>
+          <span class="endpoint-path">/signin</span>
+          <span class="endpoint-desc">Login with JWT</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/me</span>
+          <span class="endpoint-desc">Current user profile</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/global_feeds</span>
+          <span class="endpoint-desc">Browse feeds (filter, search, location)</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-post">POST</span>
+          <span class="endpoint-path">/global_feeds</span>
+          <span class="endpoint-desc">Create global or local feed post</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/businesses</span>
+          <span class="endpoint-desc">Discover nearby businesses</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/jobs</span>
+          <span class="endpoint-desc">Job listings with filters</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/offers</span>
+          <span class="endpoint-desc">Active local & global offers</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-post">POST</span>
+          <span class="endpoint-path">/live_location</span>
+          <span class="endpoint-desc">Update user location</span>
+        </div>
+        <div class="endpoint-item">
+          <span class="method-badge method-get">GET</span>
+          <span class="endpoint-path">/reach_distance/summary</span>
+          <span class="endpoint-desc">Business reach analytics</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
+     CTA
+═══════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="container text-center position-relative">
+    <div class="fade-up">
+      <div class="section-label">Get Started Today</div>
+      <h2 class="cta-title">
+        Ready to Connect<br />
+        <span style="background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip:text;">Your Community?</span>
+      </h2>
+      <p class="cta-desc">
+        Twitter24 is live and ready. Manage users, businesses, and content from the admin dashboard.
+      </p>
+
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="/admin" class="btn-primary-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-shield-lock-fill"></i> Open Admin Dashboard
+        </a>
+        <a href="/health" class="btn-outline-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-activity"></i> API Health Check
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="row g-5">
+      <div class="col-lg-4">
+        <div class="footer-brand">
+          <i class="bi bi-broadcast me-2"></i>Twitter24
+        </div>
+        <p class="footer-desc">
+          A location-aware social platform connecting people with local businesses, feeds, jobs, and offers.
+        </p>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <div class="footer-heading">Platform</div>
+        <a href="#features" class="footer-link">Features</a>
+        <a href="#how-it-works" class="footer-link">How It Works</a>
+        <a href="#for-business" class="footer-link">For Business</a>
+        <a href="#api" class="footer-link">API Docs</a>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <div class="footer-heading">API</div>
+        <a href="/up" class="footer-link">Health Check</a>
+        <a href="/health" class="footer-link">Status</a>
+        <a href="/global_feeds" class="footer-link">Feeds</a>
+        <a href="/businesses" class="footer-link">Businesses</a>
+      </div>
+
+      <div class="col-6 col-lg-2">
+        <div class="footer-heading">Admin</div>
+        <a href="/admin" class="footer-link">Dashboard</a>
+        <a href="/admin/users" class="footer-link">Users</a>
+        <a href="/admin/businesses" class="footer-link">Businesses</a>
+      </div>
+    </div>
+
+    <hr class="footer-divider" />
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+      <div class="footer-copy">© 2026 Twitter24. Built with Rails 7 · PostgreSQL · AWS S3</div>
+      <div class="d-flex gap-3">
+        <span class="pill pill-green" style="font-size:0.72rem; padding:4px 12px;">
+          <i class="bi bi-circle-fill" style="font-size:0.5rem;"></i> API Online
+        </span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Scroll fade-up animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Smooth scrolling
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

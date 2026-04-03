@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
   def set_default_url_host
     Rails.application.routes.default_url_options[:host]     = request.host_with_port
     Rails.application.routes.default_url_options[:protocol] = request.protocol.chomp("://")
+    ActiveStorage::Current.url_options = { host: request.host_with_port, protocol: request.protocol.chomp("://") }
   end
 
   attr_reader :current_user

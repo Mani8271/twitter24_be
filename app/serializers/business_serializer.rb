@@ -117,10 +117,10 @@ end
     return {} unless object.profile_picture.attached? || object.shop_images.attached?
 
     {
-      profile_picture: object.profile_picture.attached? ? url_for(object.profile_picture) : nil,
+      profile_picture: object.profile_picture.attached? ? object.profile_picture.blob.url : nil,
 
       gallery: object.shop_images.map do |img|
-        { id: img.blob.id, url: url_for(img) }
+        { id: img.blob.id, url: img.blob.url }
       end
     }
   end

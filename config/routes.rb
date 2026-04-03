@@ -8,8 +8,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   get "health" => "health#show"
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  root "home#index"
    post 'signup',     to: 'auth#signup'
   post 'signin',     to: 'auth#signin'
   post 'send_otp',   to: 'auth#send_otp'

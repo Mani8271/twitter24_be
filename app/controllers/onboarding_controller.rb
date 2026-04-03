@@ -142,8 +142,8 @@ class OnboardingController < ApplicationController
       documents: business.business_document.as_json(except: [:created_at, :updated_at]),
       images: {
         # Conditionally include profile_picture if attached
-        profile_picture: business.profile_picture.attached? ? url_for(business.profile_picture) : nil,
-        shop_images: business.shop_images.map { |img| url_for(img) }
+        profile_picture: business.profile_picture.attached? ? business.profile_picture.blob.url : nil,
+        shop_images: business.shop_images.map { |img| img.blob.url }
       }
     ),
     steps_completed: progress.steps_completed,
@@ -184,8 +184,8 @@ end
     business = current_user.business
 
     render json: {
-      profile_picture: business&.profile_picture&.attached? ? url_for(business.profile_picture) : nil,
-      shop_images: business&.shop_images&.map { |img| url_for(img) } || []
+      profile_picture: business&.profile_picture&.attached? ? business.profile_picture.blob.url : nil,
+      shop_images: business&.shop_images&.map { |img| img.blob.url } || []
     }
   end
 
