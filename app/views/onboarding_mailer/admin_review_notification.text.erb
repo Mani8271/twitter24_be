@@ -1,0 +1,42 @@
+Twitter24 — New Business Onboarding Completed
+=============================================
+
+ACTION REQUIRED: A business has completed onboarding and is waiting for your approval.
+
+OWNER DETAILS
+-------------
+Name        : <%= @user.name %>
+Phone       : <%= @user.phone_number %>
+<% if @user.email.present? %>Email       : <%= @user.email %>
+<% end %>Registered  : <%= @user.created_at.strftime("%d %b %Y, %I:%M %p") %>
+
+BUSINESS DETAILS
+----------------
+Business    : <%= @business.name %>
+Category    : <%= @business.category %>
+<% if @business.website.present? %>Website     : <%= @business.website %>
+<% end %><% if @business.about.present? %>About       : <%= @business.about %>
+<% end %>Status      : Submitted — Awaiting Review
+Submitted   : <%= Time.current.strftime("%d %b %Y, %I:%M %p") %>
+
+<% if @contact.present? %>
+CONTACT INFO
+------------
+<% if @contact.contact_person_name.present? %>Contact Person : <%= @contact.contact_person_name %>
+<% end %><% if @contact.contact_phone.present? %>Contact Phone  : <%= @contact.contact_phone %>
+<% end %><% if @contact.contact_email.present? %>Contact Email  : <%= @contact.contact_email %>
+<% end %><% if @contact.owner_name.present? %>Owner Name     : <%= @contact.owner_name %>
+<% end %><% if @contact.owner_phone.present? %>Owner Phone    : <%= @contact.owner_phone %>
+<% end %><% end %>
+<% if @location.present? %>
+LOCATION
+--------
+<% if @location.address_line1.present? %>Address : <%= [@location.address_line1, @location.address_line2].compact.join(", ") %>
+<% end %><% if @location.city.present? %>City    : <%= [@location.city, @location.state, @location.pin_code].compact.join(", ") %>
+<% end %><% end %>
+
+Review this business in the admin panel:
+<%= ENV.fetch('ADMIN_URL', 'http://localhost:3000/admin') %>/businesses/<%= @business.id %>
+
+---
+This is an automated notification from Twitter24. Do not reply.

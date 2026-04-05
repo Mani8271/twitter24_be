@@ -23,10 +23,17 @@ class AuthController < ApplicationController
     user = User.find_by(phone_number: phone_number)
     return render(json: { error: "User not found. Please sign up first." }, status: :not_found) unless user
 
+    # Cooldown: block resend within 60 seconds of the last OTP
+    last_otp = OtpCode.where(user_id: user.id).order(created_at: :desc).first
+    if last_otp && last_otp.created_at > 60.seconds.ago
+      remaining = (60 - (Time.current - last_otp.created_at).to_i)
+      return render json: { error: "Please wait #{remaining} seconds before requesting a new OTP." }, status: :too_many_requests
+    end
+
     otp = user.generate_otp
     Rails.logger.info "🚨 OTP sent to #{user.phone_number}: #{otp}"
 
-    render json: { 
+    render json: {
       message: "OTP sent to #{user.phone_number}",
       otp: otp
     }, status: :ok

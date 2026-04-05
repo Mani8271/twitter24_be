@@ -1,0 +1,23 @@
+Hi <%= @user&.name %>,
+
+We regret to inform you that your business application for "<%= @business.name %>" has NOT been approved after our review.
+
+APPLICATION DETAILS
+-------------------
+Business Name : <%= @business.name %>
+Category      : <%= @business.category %>
+Submitted By  : <%= @user&.name %> (<%= @user&.phone_number %>)
+
+WHAT YOU CAN DO NEXT
+---------------------
+- Re-upload your documents and images after making corrections
+- Ensure your GSTIN, PAN, and other documents are valid and clearly visible
+- Make sure your business details are accurate and complete
+- Re-submit your application through the app
+
+Login and re-submit: <%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login
+
+Need help? Contact us at: twitter24offical@gmail.com
+
+---
+This is an automated notification from Twitter24. Do not reply.

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(90deg, #dc2626 0%, #f97316 100%); padding: 32px 36px; }
+    .header h1 { color: #fff; font-size: 22px; margin: 0; }
+    .header p  { color: rgba(255,255,255,0.85); font-size: 14px; margin: 6px 0 0; }
+    .body { padding: 32px 36px; }
+    .alert-box { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 14px 18px; margin-bottom: 28px; font-size: 14px; color: #991b1b; }
+    .info-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px 18px; margin-top: 24px; font-size: 14px; color: #166534; }
+    .info-box ul { margin: 8px 0 0 16px; padding: 0; }
+    .info-box li { margin-bottom: 6px; }
+    .section-title { font-size: 13px; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 10px 0; font-size: 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+    td:first-child { font-weight: 600; color: #111827; width: 40%; }
+    .cta { text-align: center; margin: 32px 0 8px; }
+    .cta a { background: linear-gradient(90deg, #9333EA 0%, #2563EB 100%); color: #fff; text-decoration: none; padding: 13px 32px; border-radius: 999px; font-weight: 700; font-size: 15px; display: inline-block; }
+    .contact-box { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 14px 18px; margin-top: 16px; font-size: 14px; color: #6b21a8; text-align: center; }
+    .footer { background: #f9fafb; padding: 20px 36px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <div class="header">
+      <h1>❌ Application Not Approved</h1>
+      <p>Your business registration could not be approved at this time.</p>
+    </div>
+
+    <div class="body">
+      <p style="font-size:15px; color:#374151; margin-bottom:20px;">
+        Hi <strong><%= @user&.name %></strong>,
+      </p>
+
+      <div class="alert-box">
+        We regret to inform you that your business application for <strong><%= @business.name %></strong> has not been approved after our review.
+      </div>
+
+      <div class="section-title">Application Details</div>
+      <table>
+        <tr><td>Business Name</td><td><%= @business.name %></td></tr>
+        <tr><td>Category</td><td><%= @business.category %></td></tr>
+        <tr><td>Submitted By</td><td><%= @user&.name %> (<%= @user&.phone_number %>)</td></tr>
+      </table>
+
+      <div class="info-box">
+        <strong>What you can do next:</strong>
+        <ul>
+          <li>Re-upload your documents and images after making corrections</li>
+          <li>Ensure your GSTIN, PAN, and other documents are valid and clearly visible</li>
+          <li>Make sure your business details are accurate and complete</li>
+          <li>Re-submit your application through the app</li>
+        </ul>
+      </div>
+
+      <div class="cta">
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login">
+          Login & Re-submit Application
+        </a>
+      </div>
+
+      <div class="contact-box">
+        Need help? Contact us at
+        <a href="mailto:twitter24offical@gmail.com" style="color:#9333EA; font-weight:700; text-decoration:none;">
+          twitter24offical@gmail.com
+        </a>
+      </div>
+    </div>
+
+    <div class="footer">
+      This is an automated notification from Twitter24 &middot; Do not reply to this email
+    </div>
+
+  </div>
+</body>
+</html>

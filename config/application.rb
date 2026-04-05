@@ -16,6 +16,21 @@ module Twitter24
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w(assets tasks))
 
+    # ── Action Mailer — Gmail SMTP ──
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address:              "smtp.gmail.com",
+      port:                 587,
+      domain:               "gmail.com",
+      user_name:            ENV["GMAIL_USERNAME"],
+      password:             ENV["GMAIL_APP_PASSWORD"],
+      authentication:       "plain",
+      enable_starttls_auto: true
+    }
+    config.action_mailer.default_url_options = {
+      host: ENV.fetch("APP_HOST", "localhost:3000")
+    }
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

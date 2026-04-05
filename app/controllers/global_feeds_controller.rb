@@ -371,8 +371,8 @@ class GlobalFeedsController < ApplicationController
   
       created_feeds << main_feed
   
-      # 🔹 If create_both = true AND local selected
-      if params[:create_both].to_s == "true" 
+      # 🔹 If create_both = true AND local selected → also create global
+      if params[:create_both].to_s == "true" && feed_params[:feed_type] == "local"
         global_feed = build_feed("global")
         global_feed.save!
         attach_media(global_feed)

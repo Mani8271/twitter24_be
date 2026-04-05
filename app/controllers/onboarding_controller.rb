@@ -125,7 +125,11 @@ class OnboardingController < ApplicationController
     end
 
     mark_step_done(6)
-    business.update!(status: "submitted") if progress.completed
+
+    if progress.completed
+      business.update!(status: "submitted")
+      OnboardingMailer.admin_review_notification(current_user, business).deliver_now
+    end
 
     render json: { message: "Step 6 saved", progress: progress }, status: :ok
   end

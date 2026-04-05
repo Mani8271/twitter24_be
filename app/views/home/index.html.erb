@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Twitter24 — Discover What's Around You</title>
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
-
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
@@ -15,25 +12,184 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
 
   <style>
+    /* ── Plus Jakarta Sans (from frontend) ── */
+    @font-face {
+      font-family: 'PlusJakartaSans';
+      src: url('/fonts/PlusJakartaSans-Regular.ttf') format('truetype');
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: 'PlusJakartaSans';
+      src: url('/fonts/PlusJakartaSans-Medium.ttf') format('truetype');
+      font-weight: 500;
+    }
+    @font-face {
+      font-family: 'PlusJakartaSans';
+      src: url('/fonts/PlusJakartaSans-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+    }
+
     :root {
-      --primary: #1d9bf0;
-      --primary-dark: #0d8ae0;
-      --secondary: #0f1419;
-      --accent: #ffd700;
+      /* ── Brand colors from frontend theme ── */
+      --primary: #9333EA;
+      --primary-dark: #7C22D4;
+      --blue: #2563EB;
+      --gradient-1: linear-gradient(90deg, #9333EA 0%, #2563EB 100%);
+      --gradient-2: linear-gradient(135deg, #f43f5e 0%, #f97316 100%);
+      --gradient-3: linear-gradient(135deg, #0D9488 0%, #2563EB 100%);
+
+      /* ── Dark surface ── */
+      --secondary: #0E2B3C;
+      --accent: #FCD34D;
       --surface: #16181c;
       --surface2: #1e2128;
       --border: #2f3336;
-      --text-muted: #71767b;
+      --text-muted: #64748B;
       --text-light: #e7e9ea;
-      --gradient-1: linear-gradient(135deg, #1d9bf0 0%, #6c47ff 100%);
-      --gradient-2: linear-gradient(135deg, #ff6b6b 0%, #ffd700 100%);
-      --gradient-3: linear-gradient(135deg, #00c9a7 0%, #1d9bf0 100%);
     }
+
+    /* ── LIGHT THEME ── */
+    body.light {
+      --surface: #ffffff;
+      --surface2: #F8FAFC;
+      --border: #E2E8F0;
+      --text-muted: #64748B;
+      --text-light: #0E2B3C;
+      --secondary: #0E2B3C;
+      background-color: #F1F5F9;
+      color: #0E2B3C;
+    }
+
+    body.light .navbar {
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    body.light .nav-link { color: #334155 !important; }
+    body.light .nav-link:hover { background: #F1F5F9; color: var(--primary) !important; }
+
+    body.light .hero {
+      background: linear-gradient(135deg, #FAF5FF 0%, #EFF6FF 100%);
+    }
+    body.light .hero::before {
+      background:
+        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(147,51,234,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 10% 80%, rgba(37,99,235,0.06) 0%, transparent 60%);
+    }
+
+    body.light .hero-title { color: #0E2B3C; }
+    body.light .hero-subtitle { color: #64748B; }
+
+    body.light .hero-stats { border-top-color: #E2E8F0; }
+    body.light .hero-stat-label { color: #64748B; }
+
+    body.light .float-card {
+      background: #ffffff;
+      border-color: #E2E8F0;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+    body.light .float-card-title { color: #334155; }
+    body.light .float-card-value { color: #0E2B3C; }
+
+    body.light .phone-mockup {
+      background: #ffffff;
+      border-color: #E2E8F0;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.12);
+    }
+    body.light .phone-screen { background: #F8FAFC; }
+    body.light .phone-logo { color: var(--primary); }
+    body.light .feed-card { background: #ffffff; border-color: #E2E8F0; }
+    body.light .feed-name { color: #0E2B3C; }
+    body.light .feed-text { color: #334155; }
+
+    body.light .features-section { background: #F8FAFC; }
+    body.light .section-title { color: #0E2B3C; }
+    body.light .section-desc { color: #64748B; }
+    body.light .feature-card {
+      background: #ffffff;
+      border-color: #E2E8F0;
+    }
+    body.light .feature-card:hover { border-color: rgba(147,51,234,0.3); }
+    body.light .feature-title { color: #0E2B3C; }
+    body.light .feature-desc { color: #64748B; }
+
+    body.light .how-section { background: #F1F5F9; }
+    body.light .step-title { color: #0E2B3C; }
+    body.light .step-desc { color: #64748B; }
+
+    body.light .business-section { background: #F8FAFC; }
+    body.light .biz-card {
+      background: #ffffff;
+      border-color: #E2E8F0;
+    }
+    body.light .biz-name { color: #0E2B3C; }
+
+    body.light .roles-section { background: #F1F5F9; }
+    body.light .role-card {
+      background: #ffffff;
+      border-color: #E2E8F0;
+    }
+    body.light .role-title { color: #0E2B3C; }
+    body.light .role-subtitle { color: #64748B; }
+    body.light .role-feature-list li {
+      color: #334155;
+      border-bottom-color: #E2E8F0;
+    }
+
+    body.light .cta-section { background: #FAF5FF; }
+    body.light .cta-title { color: #0E2B3C; }
+    body.light .cta-desc { color: #64748B; }
+    body.light .btn-outline-hero {
+      border-color: #CBD5E1;
+      color: #334155;
+    }
+    body.light .btn-outline-hero:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    body.light footer {
+      background: #ffffff;
+      border-top: 1px solid #E2E8F0;
+    }
+    body.light .footer-brand { color: #0E2B3C; }
+    body.light .footer-desc { color: #64748B; }
+    body.light .footer-heading { color: #0E2B3C; }
+    body.light .footer-link { color: #64748B; }
+    body.light .footer-link:hover { color: var(--primary); }
+    body.light .footer-copy { color: #94A3B8; }
+    body.light .footer-divider { border-color: #E2E8F0; }
+
+    body.light .gradient-divider { background: #E2E8F0; height: 1px; }
+
+    body.light .pill-blue { background: rgba(147,51,234,0.08); color: var(--primary); border-color: rgba(147,51,234,0.2); }
+    body.light .pill-green { background: rgba(13,148,136,0.08); color: #0D9488; border-color: rgba(13,148,136,0.2); }
+    body.light .pill-purple { background: rgba(147,51,234,0.08); color: var(--primary); border-color: rgba(147,51,234,0.2); }
+    body.light .pill-yellow { background: rgba(217,119,6,0.08); color: #D97706; border-color: rgba(217,119,6,0.2); }
+    body.light .pill-red { background: rgba(244,63,94,0.08); color: #f43f5e; border-color: rgba(244,63,94,0.2); }
+
+    /* ── THEME TOGGLE BUTTON ── */
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { border-color: var(--primary); color: var(--primary); }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       background-color: #0a0c0f;
       color: var(--text-light);
       overflow-x: hidden;
@@ -51,7 +207,7 @@
     }
 
     .navbar-brand {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-weight: 800;
       font-size: 1.5rem;
       color: var(--primary) !important;
@@ -123,7 +279,7 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(29, 155, 240, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 70% 40%, rgba(147, 51, 234, 0.12) 0%, transparent 60%),
         radial-gradient(ellipse 50% 40% at 10% 80%, rgba(108, 71, 255, 0.10) 0%, transparent 60%);
       pointer-events: none;
     }
@@ -132,8 +288,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(29, 155, 240, 0.12);
-      border: 1px solid rgba(29, 155, 240, 0.3);
+      background: rgba(147, 51, 234, 0.12);
+      border: 1px solid rgba(147, 51, 234, 0.3);
       color: var(--primary);
       font-size: 0.82rem;
       font-weight: 600;
@@ -144,7 +300,7 @@
     }
 
     .hero-title {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: clamp(2.5rem, 6vw, 4.5rem);
       font-weight: 800;
       line-height: 1.1;
@@ -179,13 +335,13 @@
       padding: 14px 32px;
       border-radius: 999px;
       transition: all 0.3s;
-      box-shadow: 0 8px 30px rgba(29, 155, 240, 0.35);
+      box-shadow: 0 8px 30px rgba(147, 51, 234, 0.35);
       text-decoration: none;
     }
 
     .btn-primary-hero:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 40px rgba(29, 155, 240, 0.5);
+      box-shadow: 0 12px 40px rgba(147, 51, 234, 0.5);
       color: #fff;
     }
 
@@ -216,7 +372,7 @@
     }
 
     .hero-stat-number {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: 2rem;
       font-weight: 800;
       background: var(--gradient-1);
@@ -282,7 +438,7 @@
     }
 
     .phone-logo {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-weight: 800;
       font-size: 1.1rem;
       color: var(--primary);
@@ -366,9 +522,9 @@
 
     .badge-global {
       font-size: 0.55rem;
-      background: rgba(29, 155, 240, 0.15);
+      background: rgba(147, 51, 234, 0.15);
       color: var(--primary);
-      border: 1px solid rgba(29, 155, 240, 0.3);
+      border: 1px solid rgba(147, 51, 234, 0.3);
       padding: 2px 7px;
       border-radius: 999px;
       font-weight: 600;
@@ -410,7 +566,7 @@
     }
 
     .float-card-value {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: 1.2rem;
       font-weight: 700;
       color: var(--text-light);
@@ -437,7 +593,7 @@
     }
 
     .glow-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; right: -100px; }
-    .glow-2 { width: 300px; height: 300px; background: #6c47ff; bottom: -50px; left: -50px; }
+    .glow-2 { width: 300px; height: 300px; background: #2563EB; bottom: -50px; left: -50px; }
 
     /* ── FEATURES ── */
     .section-label {
@@ -450,7 +606,7 @@
     }
 
     .section-title {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: clamp(1.8rem, 4vw, 2.8rem);
       font-weight: 800;
       line-height: 1.2;
@@ -492,13 +648,13 @@
       transition: opacity 0.3s;
     }
 
-    .feature-card:hover { transform: translateY(-6px); border-color: rgba(29, 155, 240, 0.3); }
+    .feature-card:hover { transform: translateY(-6px); border-color: rgba(147, 51, 234, 0.3); }
     .feature-card:hover::before { opacity: 1; }
 
     .fc-blue::before { background: var(--gradient-1); }
     .fc-green::before { background: var(--gradient-3); }
     .fc-orange::before { background: var(--gradient-2); }
-    .fc-purple::before { background: linear-gradient(135deg, #6c47ff, #1d9bf0); }
+    .fc-purple::before { background: linear-gradient(135deg, #2563EB, var(--primary)); }
 
     .feature-icon {
       width: 56px;
@@ -511,15 +667,15 @@
       margin-bottom: 20px;
     }
 
-    .fi-blue { background: rgba(29, 155, 240, 0.15); color: var(--primary); }
+    .fi-blue { background: rgba(147, 51, 234, 0.15); color: var(--primary); }
     .fi-green { background: rgba(0, 201, 167, 0.15); color: #00c9a7; }
     .fi-orange { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
-    .fi-purple { background: rgba(108, 71, 255, 0.15); color: #6c47ff; }
+    .fi-purple { background: rgba(108, 71, 255, 0.15); color: #2563EB; }
     .fi-yellow { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
     .fi-pink { background: rgba(255, 107, 156, 0.15); color: #ff6b9d; }
 
     .feature-title {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: 1.2rem;
       font-weight: 700;
       margin-bottom: 10px;
@@ -546,7 +702,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-weight: 800;
       font-size: 1.1rem;
       color: #fff;
@@ -564,7 +720,7 @@
     .step-content { padding-left: 20px; }
 
     .step-title {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-weight: 700;
       font-size: 1.1rem;
       margin-bottom: 6px;
@@ -588,7 +744,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(29, 155, 240, 0.06) 0%, transparent 70%);
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(147, 51, 234, 0.06) 0%, transparent 70%);
     }
 
     .biz-card {
@@ -603,7 +759,7 @@
       margin-bottom: 16px;
     }
 
-    .biz-card:hover { border-color: rgba(29, 155, 240, 0.3); transform: translateX(6px); }
+    .biz-card:hover { border-color: rgba(147, 51, 234, 0.3); transform: translateX(6px); }
 
     .biz-avatar {
       width: 52px;
@@ -662,20 +818,20 @@
       transition: all 0.2s;
     }
 
-    .endpoint-item:hover { border-color: rgba(29,155,240,0.3); }
+    .endpoint-item:hover { border-color: rgba(147,51,234,0.3); }
 
     .method-badge {
       font-size: 0.7rem;
       font-weight: 700;
       padding: 4px 10px;
       border-radius: 6px;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       min-width: 52px;
       text-align: center;
     }
 
     .method-get { background: rgba(0, 201, 167, 0.15); color: #00c9a7; }
-    .method-post { background: rgba(29, 155, 240, 0.15); color: var(--primary); }
+    .method-post { background: rgba(147, 51, 234, 0.15); color: var(--primary); }
     .method-put { background: rgba(255, 215, 0, 0.15); color: #ffd700; }
     .method-delete { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
 
@@ -691,6 +847,138 @@
       color: var(--text-muted);
     }
 
+    /* ── ROLE CARDS ── */
+    .roles-section {
+      padding: 100px 0;
+      background: #0a0c0f;
+    }
+
+    .role-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 36px;
+      height: 100%;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 24px 24px 0 0;
+    }
+
+    .role-card-user::before { background: var(--gradient-1); }
+    .role-card-business::before { background: var(--gradient-2); }
+
+    .role-card:hover {
+      border-color: rgba(147, 51, 234, 0.3);
+      transform: translateY(-6px);
+    }
+
+    .role-card-business:hover { border-color: rgba(255, 107, 107, 0.3); }
+
+    .role-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: 24px;
+    }
+
+    .role-icon-user { background: rgba(147, 51, 234, 0.12); color: var(--primary); }
+    .role-icon-business { background: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
+
+    .role-title {
+      font-family: 'PlusJakartaSans', sans-serif;
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .role-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+
+    .role-feature-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 32px;
+    }
+
+    .role-feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .role-feature-list li:last-child { border-bottom: none; }
+
+    .role-feature-list li .check-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .check-icon-user { background: rgba(147, 51, 234, 0.15); color: var(--primary); }
+    .check-icon-business { background: rgba(255, 107, 107, 0.15); color: #ff6b6b; }
+
+    .btn-role-user {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gradient-1);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 13px 28px;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: all 0.2s;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-role-user:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+
+    .btn-role-business {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gradient-2);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 13px 28px;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: all 0.2s;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-role-business:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; }
+
     /* ── CTA ── */
     .cta-section {
       padding: 120px 0;
@@ -703,11 +991,11 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(29, 155, 240, 0.1) 0%, transparent 70%);
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
     }
 
     .cta-title {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-size: clamp(2rem, 5vw, 3.5rem);
       font-weight: 800;
       line-height: 1.15;
@@ -731,7 +1019,7 @@
     }
 
     .footer-brand {
-      font-family: 'Poppins', sans-serif;
+      font-family: 'PlusJakartaSans', sans-serif;
       font-weight: 800;
       font-size: 1.4rem;
       color: var(--primary);
@@ -804,9 +1092,9 @@
       margin: 4px;
     }
 
-    .pill-blue { background: rgba(29,155,240,0.12); color: var(--primary); border: 1px solid rgba(29,155,240,0.2); }
+    .pill-blue { background: rgba(147,51,234,0.12); color: var(--primary); border: 1px solid rgba(147,51,234,0.2); }
     .pill-green { background: rgba(0,201,167,0.12); color: #00c9a7; border: 1px solid rgba(0,201,167,0.2); }
-    .pill-purple { background: rgba(108,71,255,0.12); color: #6c47ff; border: 1px solid rgba(108,71,255,0.2); }
+    .pill-purple { background: rgba(108,71,255,0.12); color: #2563EB; border: 1px solid rgba(108,71,255,0.2); }
     .pill-yellow { background: rgba(255,215,0,0.12); color: #ffd700; border: 1px solid rgba(255,215,0,0.2); }
     .pill-red { background: rgba(255,107,107,0.12); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.2); }
   </style>
@@ -819,12 +1107,12 @@
 <nav class="navbar navbar-expand-lg">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <div class="logo-icon"><i class="bi bi-broadcast"></i></div>
+      <img src="/logo.png" alt="Twitter24" style="width:36px;height:36px;border-radius:10px;object-fit:contain;" />
       Twitter24
     </a>
 
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-      <i class="bi bi-list text-white fs-4"></i>
+      <i class="bi bi-list fs-4" style="color: var(--text-light);"></i>
     </button>
 
     <div class="collapse navbar-collapse" id="navMenu">
@@ -832,12 +1120,14 @@
         <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
         <li class="nav-item"><a class="nav-link" href="#how-it-works">How it Works</a></li>
         <li class="nav-item"><a class="nav-link" href="#for-business">For Business</a></li>
-        <li class="nav-item"><a class="nav-link" href="#api">API</a></li>
       </ul>
 
-      <div class="d-flex gap-2 mt-3 mt-lg-0">
-        <a href="/admin" class="nav-link btn-nav-signin">Admin</a>
-        <a href="#" class="nav-link btn-nav-signup">Get Started</a>
+      <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+          <i class="bi bi-moon-fill" id="themeIcon"></i>
+        </button>
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/login" class="nav-link btn-nav-signin">Login as User</a>
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="nav-link btn-nav-signup">Login as Business</a>
       </div>
     </div>
   </div>
@@ -868,27 +1158,12 @@
         </p>
 
         <div class="hero-actions">
-          <a href="/admin" class="btn-primary-hero">
-            <i class="bi bi-shield-lock-fill me-2"></i>Admin Dashboard
+          <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/login" class="btn-primary-hero">
+            <i class="bi bi-person-fill me-2"></i>Login as User
           </a>
-          <a href="#features" class="btn-outline-hero">
-            <i class="bi bi-arrow-down me-2"></i>Explore Features
+          <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="btn-outline-hero">
+            <i class="bi bi-building me-2"></i>Login as Business
           </a>
-        </div>
-
-        <div class="hero-stats">
-          <div>
-            <div class="hero-stat-number">6-Step</div>
-            <div class="hero-stat-label">Business Onboarding</div>
-          </div>
-          <div>
-            <div class="hero-stat-number">50km</div>
-            <div class="hero-stat-label">Max Reach Radius</div>
-          </div>
-          <div>
-            <div class="hero-stat-number">JWT</div>
-            <div class="hero-stat-label">Secure Auth</div>
-          </div>
         </div>
       </div>
 
@@ -947,7 +1222,7 @@
               <!-- Feed Card 2 -->
               <div class="feed-card">
                 <div class="feed-card-header">
-                  <div class="feed-avatar" style="background: linear-gradient(135deg,#1d9bf0,#6c47ff);"></div>
+                  <div class="feed-avatar" style="background: linear-gradient(135deg,var(--primary),#2563EB);"></div>
                   <div>
                     <div class="feed-name">TechHub Cowork</div>
                     <div class="feed-time">15 min · <span class="badge-global">Global</span></div>
@@ -964,7 +1239,7 @@
               <!-- Feed Card 3 -->
               <div class="feed-card">
                 <div class="feed-card-header">
-                  <div class="feed-avatar" style="background: linear-gradient(135deg,#00c9a7,#1d9bf0);"></div>
+                  <div class="feed-avatar" style="background: linear-gradient(135deg,#00c9a7,var(--primary));"></div>
                   <div>
                     <div class="feed-name">City Events</div>
                     <div class="feed-time">1h · <span class="badge-local">Local</span></div>
@@ -1066,6 +1341,108 @@
 <div class="gradient-divider"></div>
 
 <!-- ═══════════════════════════════════════
+     CHOOSE YOUR ROLE
+═══════════════════════════════════════ -->
+<section class="roles-section" id="choose-role">
+  <div class="container">
+
+    <div class="text-center mb-5 fade-up">
+      <div class="section-label">Two Ways to Join</div>
+      <h2 class="section-title">Who Are You?</h2>
+      <p class="section-desc mx-auto">
+        Twitter24 is built for both everyday users and business owners. Choose your path and get started.
+      </p>
+    </div>
+
+    <div class="row g-4 align-items-stretch">
+
+      <!-- USER CARD -->
+      <div class="col-lg-6 fade-up">
+        <div class="role-card role-card-user">
+          <div class="role-icon role-icon-user"><i class="bi bi-person-fill"></i></div>
+          <div class="role-title">Login as User</div>
+          <p class="role-subtitle">Explore what's happening around you — local feeds, nearby businesses, job listings, and exclusive offers, all in one place.</p>
+
+          <ul class="role-feature-list">
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Discover Local Feeds</strong> — Browse posts from businesses and people near you. Filter by category, distance, or media type.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Find Nearby Businesses</strong> — See open/closed status, ratings, distance, and business hours in real time.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Browse Jobs</strong> — Filter job listings by type (full-time, part-time, freelance), salary, and experience level.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Grab Local Offers</strong> — Discover time-limited deals and promotions from businesses in your area before they expire.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Like, Comment & Follow</strong> — Engage with content, leave reviews, and follow businesses you love.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-user"><i class="bi bi-check2"></i></span>
+              <span><strong>Location-Aware Experience</strong> — Everything is tailored to your real-time location automatically.</span>
+            </li>
+          </ul>
+
+          <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/login" class="btn-role-user">
+            <i class="bi bi-person-fill"></i> Login as User
+          </a>
+        </div>
+      </div>
+
+      <!-- BUSINESS ADMIN CARD -->
+      <div class="col-lg-6 fade-up" style="transition-delay: 0.15s">
+        <div class="role-card role-card-business">
+          <div class="role-icon role-icon-business"><i class="bi bi-building"></i></div>
+          <div class="role-title">Login as Business Admin</div>
+          <p class="role-subtitle">Register and manage your business profile, post content, publish offers and jobs, and track how many users you're reaching.</p>
+
+          <ul class="role-feature-list">
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Business Profile</strong> — Set up your name, category, about, website, and contact details with a 6-step onboarding.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Manage Hours & Location</strong> — Set your 7-day schedule and pin your exact location so nearby users find you easily.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Post Feeds & Updates</strong> — Share announcements, photos, and promotions that reach users in your radius.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Publish Offers & Jobs</strong> — Post time-limited offers and job openings visible to users around your location.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Reach Analytics</strong> — See how many users are within 5km to 50km of your business in real time.</span>
+            </li>
+            <li>
+              <span class="check-icon check-icon-business"><i class="bi bi-check2"></i></span>
+              <span><strong>Online/Offline Toggle</strong> — Instantly update your open status so users always know if you're available.</span>
+            </li>
+          </ul>
+
+          <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="btn-role-business">
+            <i class="bi bi-building"></i> Login as Business Admin
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="gradient-divider"></div>
+
+<!-- ═══════════════════════════════════════
      HOW IT WORKS
 ═══════════════════════════════════════ -->
 <section class="how-section" id="how-it-works">
@@ -1152,7 +1529,7 @@
         </div>
 
         <div class="biz-card">
-          <div class="biz-avatar" style="background: rgba(29,155,240,0.15); color:var(--primary);">💻</div>
+          <div class="biz-avatar" style="background: rgba(147,51,234,0.15); color:var(--primary);">💻</div>
           <div>
             <div class="biz-name">TechHub Coworking</div>
             <div class="biz-category">Workspace · 1.2 km away</div>
@@ -1176,7 +1553,7 @@
         </div>
 
         <div class="biz-card" style="opacity: 0.5;">
-          <div class="biz-avatar" style="background: rgba(108,71,255,0.15); color:#6c47ff;">📚</div>
+          <div class="biz-avatar" style="background: rgba(108,71,255,0.15); color:#2563EB;">📚</div>
           <div>
             <div class="biz-name">BookNook Store</div>
             <div class="biz-category">Retail · 3.5 km away</div>
@@ -1233,88 +1610,9 @@
           </div>
         </div>
 
-        <a href="/admin" class="btn-primary-hero d-inline-flex align-items-center gap-2">
-          <i class="bi bi-shield-lock-fill"></i> Go to Admin Panel
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="btn-primary-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-building"></i> Login as Business Admin
         </a>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<div class="gradient-divider"></div>
-
-<!-- ═══════════════════════════════════════
-     API ENDPOINTS
-═══════════════════════════════════════ -->
-<section class="api-section" id="api">
-  <div class="container">
-    <div class="row g-5">
-
-      <div class="col-lg-4 fade-up">
-        <div class="section-label">REST API</div>
-        <h2 class="section-title">Clean API Endpoints</h2>
-        <p class="section-desc">
-          Every feature is accessible via a clean JSON REST API with JWT authentication. Built for mobile apps and web frontends.
-        </p>
-        <div class="mt-4">
-          <div class="pill pill-blue mb-2"><i class="bi bi-lock-fill"></i> JWT Auth</div><br/>
-          <div class="pill pill-green mb-2"><i class="bi bi-braces"></i> JSON Responses</div><br/>
-          <div class="pill pill-purple"><i class="bi bi-geo-fill"></i> Location-Aware</div>
-        </div>
-      </div>
-
-      <div class="col-lg-8 fade-up">
-        <div class="endpoint-item">
-          <span class="method-badge method-post">POST</span>
-          <span class="endpoint-path">/signup</span>
-          <span class="endpoint-desc">Create account</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-post">POST</span>
-          <span class="endpoint-path">/signin</span>
-          <span class="endpoint-desc">Login with JWT</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/me</span>
-          <span class="endpoint-desc">Current user profile</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/global_feeds</span>
-          <span class="endpoint-desc">Browse feeds (filter, search, location)</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-post">POST</span>
-          <span class="endpoint-path">/global_feeds</span>
-          <span class="endpoint-desc">Create global or local feed post</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/businesses</span>
-          <span class="endpoint-desc">Discover nearby businesses</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/jobs</span>
-          <span class="endpoint-desc">Job listings with filters</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/offers</span>
-          <span class="endpoint-desc">Active local & global offers</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-post">POST</span>
-          <span class="endpoint-path">/live_location</span>
-          <span class="endpoint-desc">Update user location</span>
-        </div>
-        <div class="endpoint-item">
-          <span class="method-badge method-get">GET</span>
-          <span class="endpoint-path">/reach_distance/summary</span>
-          <span class="endpoint-desc">Business reach analytics</span>
-        </div>
       </div>
 
     </div>
@@ -1335,15 +1633,15 @@
         <span style="background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip:text;">Your Community?</span>
       </h2>
       <p class="cta-desc">
-        Twitter24 is live and ready. Manage users, businesses, and content from the admin dashboard.
+        Twitter24 is live and ready. Sign in to discover local businesses, feeds, jobs, and offers around you — or manage your business profile.
       </p>
 
       <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="/admin" class="btn-primary-hero d-inline-flex align-items-center gap-2">
-          <i class="bi bi-shield-lock-fill"></i> Open Admin Dashboard
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/login" class="btn-primary-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-person-fill"></i> Login as User
         </a>
-        <a href="/health" class="btn-outline-hero d-inline-flex align-items-center gap-2">
-          <i class="bi bi-activity"></i> API Health Check
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="btn-outline-hero d-inline-flex align-items-center gap-2">
+          <i class="bi bi-building"></i> Login as Business Admin
         </a>
       </div>
     </div>
@@ -1358,7 +1656,7 @@
     <div class="row g-5">
       <div class="col-lg-4">
         <div class="footer-brand">
-          <i class="bi bi-broadcast me-2"></i>Twitter24
+          <img src="/logo.png" alt="Twitter24" style="width:28px;height:28px;border-radius:8px;object-fit:contain;margin-right:8px;vertical-align:middle;" />Twitter24
         </div>
         <p class="footer-desc">
           A location-aware social platform connecting people with local businesses, feeds, jobs, and offers.
@@ -1370,22 +1668,13 @@
         <a href="#features" class="footer-link">Features</a>
         <a href="#how-it-works" class="footer-link">How It Works</a>
         <a href="#for-business" class="footer-link">For Business</a>
-        <a href="#api" class="footer-link">API Docs</a>
       </div>
 
       <div class="col-6 col-lg-2">
-        <div class="footer-heading">API</div>
-        <a href="/up" class="footer-link">Health Check</a>
-        <a href="/health" class="footer-link">Status</a>
-        <a href="/global_feeds" class="footer-link">Feeds</a>
-        <a href="/businesses" class="footer-link">Businesses</a>
-      </div>
-
-      <div class="col-6 col-lg-2">
-        <div class="footer-heading">Admin</div>
-        <a href="/admin" class="footer-link">Dashboard</a>
-        <a href="/admin/users" class="footer-link">Users</a>
-        <a href="/admin/businesses" class="footer-link">Businesses</a>
+        <div class="footer-heading">Login</div>
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/login" class="footer-link">User Login</a>
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/business/login" class="footer-link">Business Login</a>
+        <a href="<%= ENV.fetch('FRONTEND_URL', 'http://localhost:3000') %>/signup" class="footer-link">Sign Up</a>
       </div>
     </div>
 
@@ -1406,18 +1695,40 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-  // Scroll fade-up animation
+  // ── DARK / LIGHT THEME ──
+  const toggle = document.getElementById('themeToggle');
+  const icon   = document.getElementById('themeIcon');
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.body.classList.add('light');
+      icon.className = 'bi bi-sun-fill';
+    } else {
+      document.body.classList.remove('light');
+      icon.className = 'bi bi-moon-fill';
+    }
+  }
+
+  // Load saved preference; default to dark
+  const saved = localStorage.getItem('t24_theme') || 'dark';
+  applyTheme(saved);
+
+  toggle.addEventListener('click', () => {
+    const next = document.body.classList.contains('light') ? 'dark' : 'light';
+    localStorage.setItem('t24_theme', next);
+    applyTheme(next);
+  });
+
+  // ── SCROLL FADE-UP ──
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
+      if (entry.isIntersecting) entry.target.classList.add('visible');
     });
   }, { threshold: 0.1 });
 
   document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 
-  // Smooth scrolling
+  // ── SMOOTH SCROLL ──
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       const target = document.querySelector(this.getAttribute('href'));

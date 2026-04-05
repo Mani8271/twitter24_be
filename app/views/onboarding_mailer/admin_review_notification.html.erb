@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+    .wrapper { max-width: 620px; margin: 32px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(90deg, #9333EA 0%, #2563EB 100%); padding: 32px 36px; }
+    .header h1 { color: #fff; font-size: 22px; margin: 0; }
+    .header p  { color: rgba(255,255,255,0.8); font-size: 14px; margin: 6px 0 0; }
+    .body { padding: 32px 36px; }
+    .alert-box { background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px; padding: 14px 18px; margin-bottom: 28px; font-size: 14px; color: #92400E; }
+    .section-title { font-size: 13px; font-weight: 700; color: #9333EA; text-transform: uppercase; letter-spacing: 0.5px; margin: 24px 0 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 10px 0; font-size: 14px; color: #374151; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
+    td:first-child { font-weight: 600; color: #111827; width: 40%; }
+    .badge { display: inline-block; background: #EDE9FE; color: #6D28D9; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+    .cta { text-align: center; margin: 32px 0 8px; }
+    .cta a { background: linear-gradient(90deg, #9333EA 0%, #2563EB 100%); color: #fff; text-decoration: none; padding: 13px 32px; border-radius: 999px; font-weight: 700; font-size: 15px; display: inline-block; }
+    .footer { background: #F9FAFB; padding: 20px 36px; text-align: center; font-size: 12px; color: #9CA3AF; border-top: 1px solid #E5E7EB; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>🏢 New Business Onboarding Completed</h1>
+      <p>A business has finished all 6 onboarding steps and is waiting for your approval.</p>
+    </div>
+
+    <!-- Body -->
+    <div class="body">
+
+      <div class="alert-box">
+        ⚠️ <strong>Action Required:</strong> Please review the details below and approve or reject this business from the admin panel.
+      </div>
+
+      <!-- Owner Details -->
+      <div class="section-title">Owner / Account Details</div>
+      <table>
+        <tr><td>Name</td><td><%= @user.name %></td></tr>
+        <tr><td>Phone</td><td><%= @user.phone_number %></td></tr>
+        <% if @user.email.present? %>
+        <tr><td>Email</td><td><%= @user.email %></td></tr>
+        <% end %>
+        <tr><td>Account Type</td><td><span class="badge">Business</span></td></tr>
+        <tr><td>Registered On</td><td><%= @user.created_at.strftime("%d %b %Y, %I:%M %p") %></td></tr>
+      </table>
+
+      <!-- Business Details -->
+      <div class="section-title">Business Details</div>
+      <table>
+        <tr><td>Business Name</td><td><%= @business.name %></td></tr>
+        <tr><td>Category</td><td><%= @business.category %></td></tr>
+        <% if @business.year_established.present? %>
+        <tr><td>Year Est.</td><td><%= @business.year_established %></td></tr>
+        <% end %>
+        <% if @business.website.present? %>
+        <tr><td>Website</td><td><%= @business.website %></td></tr>
+        <% end %>
+        <% if @business.about.present? %>
+        <tr><td>About</td><td><%= @business.about %></td></tr>
+        <% end %>
+        <tr><td>Status</td><td><span class="badge">Submitted — Awaiting Review</span></td></tr>
+        <tr><td>Submitted At</td><td><%= Time.current.strftime("%d %b %Y, %I:%M %p") %></td></tr>
+      </table>
+
+      <!-- Contact Info -->
+      <% if @contact.present? %>
+      <div class="section-title">Contact Info</div>
+      <table>
+        <% if @contact.contact_person_name.present? %>
+        <tr><td>Contact Person</td><td><%= @contact.contact_person_name %></td></tr>
+        <% end %>
+        <% if @contact.contact_phone.present? %>
+        <tr><td>Contact Phone</td><td><%= @contact.contact_phone %></td></tr>
+        <% end %>
+        <% if @contact.contact_email.present? %>
+        <tr><td>Contact Email</td><td><%= @contact.contact_email %></td></tr>
+        <% end %>
+        <% if @contact.owner_name.present? %>
+        <tr><td>Owner Name</td><td><%= @contact.owner_name %></td></tr>
+        <% end %>
+        <% if @contact.owner_phone.present? %>
+        <tr><td>Owner Phone</td><td><%= @contact.owner_phone %></td></tr>
+        <% end %>
+        <% if @contact.owner_email.present? %>
+        <tr><td>Owner Email</td><td><%= @contact.owner_email %></td></tr>
+        <% end %>
+      </table>
+      <% end %>
+
+      <!-- Location -->
+      <% if @location.present? %>
+      <div class="section-title">Location</div>
+      <table>
+        <% if @location.address_line1.present? %>
+        <tr><td>Address</td><td><%= [@location.address_line1, @location.address_line2].compact.join(", ") %></td></tr>
+        <% end %>
+        <% if @location.city.present? %>
+        <tr><td>City / State</td><td><%= [@location.city, @location.state, @location.pin_code].compact.join(", ") %></td></tr>
+        <% end %>
+        <% if @location.map_address.present? %>
+        <tr><td>Map Address</td><td><%= @location.map_address %></td></tr>
+        <% end %>
+      </table>
+      <% end %>
+
+      <!-- CTA -->
+      <div class="cta">
+        <a href="<%= ENV.fetch('ADMIN_URL', 'http://localhost:3000/admin') %>/businesses/<%= @business.id %>">
+          Review in Admin Panel →
+        </a>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      This is an automated notification from Twitter24 &middot; Do not reply to this email
+    </div>
+
+  </div>
+</body>
+</html>
