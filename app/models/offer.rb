@@ -1,6 +1,6 @@
 class Offer < ApplicationRecord
   belongs_to :user
-  has_one_attached :media
+  has_many_attached :media
 
   validates :title, :description, :offer_type, presence: true
   validates :offer_type, inclusion: { in: %w[local global] }

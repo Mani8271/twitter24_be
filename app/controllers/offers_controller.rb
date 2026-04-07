@@ -63,7 +63,7 @@ class OffersController < ApplicationController
     end
   
     def offer_params
-      params.permit(
+      permitted = params.permit(
         :title,
         :description,
         :offer_type,
@@ -74,9 +74,11 @@ class OffersController < ApplicationController
         :valid_till,
         :tags,
         :disappearing_days,
-        :media,
+        media: [],
         links: [:button_name, :url]
       )
+      permitted[:links] = permitted[:links].map(&:to_h) if permitted[:links].present?
+      permitted
     end
   
     def unauthorized

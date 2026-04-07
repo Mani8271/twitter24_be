@@ -13,15 +13,20 @@ class OfferSerializer < ActiveModel::Serializer
              :tags,
              :disappearing_days,
              :links,
-             :media_url,
+             :media,
              :created_at,
              :user_id,
              :poster_name,
              :poster_avatar
 
-  def media_url
-    return nil unless object.media.attached?
-    rails_blob_url(object.media)
+  def media
+    return [] unless object.media.attached?
+    object.media.map do |attachment|
+      {
+        url:          rails_blob_url(attachment),
+        content_type: attachment.content_type
+      }
+    end
   end
 
   def poster_name

@@ -58,6 +58,12 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :offers
   resources :jobs
 
+  namespace :api do
+    namespace :v1 do
+      get "subscriptions/plans", to: "subscriptions#plans"
+    end
+  end
+
 
 
 

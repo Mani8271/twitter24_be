@@ -29,6 +29,7 @@ has_one :live_location, dependent: :destroy
 
  has_many :offers, dependent: :destroy
  has_many :jobs, dependent: :destroy
+ belongs_to :subscription_plan, optional: true
 
  has_many :followed_businesses,
           -> { where(follows: { followable_type: "Business" }) },

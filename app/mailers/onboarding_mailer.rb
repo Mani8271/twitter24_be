@@ -7,10 +7,10 @@ class OnboardingMailer < ApplicationMailer
     @contact  = business.business_contact
     @location = business.business_location
 
-    mail(
-      to:      "twitter24offical@gmail.com",
-      subject: "New Business Onboarding Completed — #{business.name} (Review Required)"
-    )
+    # mail(
+    #   to:      "twitter24offical@gmail.com",
+    #   subject: "New Business Onboarding Completed — #{business.name} (Review Required)"
+    # )
   end
 
   def rejection_notification(user, business)
@@ -24,9 +24,9 @@ class OnboardingMailer < ApplicationMailer
 
     return unless recipient.present?
 
-    mail(
-      to:      recipient,
-      subject: "Your Business Application Was Not Approved — #{business.name}"
-    )
+    # mail(
+    #   to:      recipient,
+    #   subject: "Your Business Application Was Not Approved — #{business.name}"
+    # )
   end
 end
