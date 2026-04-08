@@ -31,6 +31,14 @@ has_one :live_location, dependent: :destroy
  has_many :jobs, dependent: :destroy
  belongs_to :subscription_plan, optional: true
 
+ def has_feature?(feature_key)
+   subscription_plan&.has_feature?(feature_key) || false
+ end
+
+ def feature_limit(feature_key)
+   subscription_plan&.limit_for(feature_key)
+ end
+
  has_many :followed_businesses,
           -> { where(follows: { followable_type: "Business" }) },
           through: :follows,
@@ -46,7 +54,7 @@ has_one :live_location, dependent: :destroy
       user_id: id,
       phone_number: phone_number,
       otp_number: otp,
-      otp_expiry: 10.minutes.from_now
+      otp_expiry: 5.minutes.from_now
     )
     otp
   end

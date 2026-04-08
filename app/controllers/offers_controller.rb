@@ -7,18 +7,30 @@ class OffersController < ApplicationController
     # ?offer_type=global
     # ?my=true
     def index
+      per_page = 10
+      page     = [params[:page].to_i, 1].max
+
       offers = Offer.active.order(created_at: :desc)
-  
-      # Filter by type
+
       offers = offers.by_type(params[:offer_type])
-  
-      # Show only current user's offers if my=true
+
       if params[:my].present? && params[:my] == "true"
         offers = offers.where(user_id: current_user.id)
       end
       offers = offers.where(user_id: params[:user_id]) if params[:user_id].present?
-  
-      render json: offers
+
+      total  = offers.count
+      offers = offers.offset((page - 1) * per_page).limit(per_page)
+
+      render json: {
+        offers:  offers,
+        meta: {
+          page:     page,
+          per_page: per_page,
+          total:    total,
+          has_more: (page * per_page) < total
+        }
+      }
     end
   
     # GET /api/v1/offers/:id

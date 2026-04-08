@@ -222,20 +222,31 @@ class GlobalFeedsController < ApplicationController
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
   def index
+    per_page = 10
+    page     = [params[:page].to_i, 1].max
+
     # user_id param → return that user's posts directly
     if params[:user_id].present?
       feeds = GlobalFeed.where(user_id: params[:user_id]).order(created_at: :desc)
       feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
-      return render json: feeds, each_serializer: GlobalFeedSerializer, scope: current_user
+      total = feeds.count
+      feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+      return render json: {
+        feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
+        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total }
+      }
     end
 
     # scope=my → directly return current user's posts, skip all filters
     if params[:scope] == "my"
       feeds = GlobalFeed.where(user_id: current_user.id).order(created_at: :desc)
-      if params[:type].present?
-        feeds = feeds.where(feed_type: params[:type])
-      end
-      return render json: feeds, each_serializer: GlobalFeedSerializer, scope: current_user
+      feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
+      total = feeds.count
+      feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+      return render json: {
+        feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
+        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total }
+      }
     end
 
     feeds = GlobalFeed.where.not(user_id: current_user.id).order(created_at: :desc)
@@ -331,9 +342,22 @@ class GlobalFeedsController < ApplicationController
       feeds = feeds.reorder(created_at: :desc)
     end
 
-    render json: feeds,
-           each_serializer: GlobalFeedSerializer,
-           scope: current_user
+    total = feeds.count
+    feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      feeds:    ActiveModelSerializers::SerializableResource.new(
+                  feeds,
+                  each_serializer: GlobalFeedSerializer,
+                  scope: current_user
+                ).as_json,
+      meta: {
+        page:     page,
+        per_page: per_page,
+        total:    total,
+        has_more: (page * per_page) < total
+      }
+    }
   end
 
   def show

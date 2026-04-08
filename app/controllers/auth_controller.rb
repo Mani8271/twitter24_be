@@ -15,6 +15,8 @@ class AuthController < ApplicationController
     end
   end
 
+  MAX_OTP_RESENDS_PER_DAY = 5
+
   # POST /send_otp
   def send_otp
     phone_number = params[:phone_number]
@@ -23,19 +25,38 @@ class AuthController < ApplicationController
     user = User.find_by(phone_number: phone_number)
     return render(json: { error: "User not found. Please sign up first." }, status: :not_found) unless user
 
-    # Cooldown: block resend within 60 seconds of the last OTP
+    # ── 60-second cooldown between consecutive resends ──────────────────────
     last_otp = OtpCode.where(user_id: user.id).order(created_at: :desc).first
     if last_otp && last_otp.created_at > 60.seconds.ago
       remaining = (60 - (Time.current - last_otp.created_at).to_i)
       return render json: { error: "Please wait #{remaining} seconds before requesting a new OTP." }, status: :too_many_requests
     end
 
+    # ── 24-hour resend limit ─────────────────────────────────────────────────
+    # Reset counter if the 24-hour window has passed
+    if user.otp_resend_window_start.nil? || user.otp_resend_window_start < 24.hours.ago
+      user.update_columns(otp_resend_count: 0, otp_resend_window_start: Time.current)
+    end
+
+    if user.otp_resend_count >= MAX_OTP_RESENDS_PER_DAY
+      window_resets_at = user.otp_resend_window_start + 24.hours
+      hours_left = ((window_resets_at - Time.current) / 3600).ceil
+      return render json: {
+        error: "You have reached the maximum of #{MAX_OTP_RESENDS_PER_DAY} OTP requests per day. Try again in #{hours_left} hour(s).",
+        resend_limit_reached: true,
+        resets_in_hours: hours_left
+      }, status: :too_many_requests
+    end
+
     otp = user.generate_otp
-    Rails.logger.info "🚨 OTP sent to #{user.phone_number}: #{otp}"
+    user.increment!(:otp_resend_count)
+
+    Rails.logger.info "OTP sent to #{user.phone_number}: #{otp} (resend #{user.otp_resend_count}/#{MAX_OTP_RESENDS_PER_DAY} today)"
 
     render json: {
       message: "OTP sent to #{user.phone_number}",
-      otp: otp
+      otp: otp,
+      resends_remaining: MAX_OTP_RESENDS_PER_DAY - user.otp_resend_count
     }, status: :ok
   end
 
