@@ -218,6 +218,8 @@
 # end
 
 class GlobalFeedsController < ApplicationController
+  include PlanAuthorized
+
   before_action :authorize_request
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
@@ -385,22 +387,36 @@ class GlobalFeedsController < ApplicationController
   #   end
   # end
   def create
+    # ── Plan check ─────────────────────────────────────────────────────────
+    requested_type  = feed_params[:feed_type]
+    feature_key     = requested_type == "local" ? "local_feed" : "global_feed"
+    create_both     = params[:create_both].to_s == "true" && requested_type == "local"
+
+    return unless require_feature!(feature_key)
+    return unless check_limit!(feature_key, current_user.global_feeds.where(feed_type: requested_type).count)
+
+    # If create_both is requested, also check the global_feed limit separately
+    if create_both
+      return unless require_feature!("global_feed")
+      return unless check_limit!("global_feed", current_user.global_feeds.where(feed_type: "global").count)
+    end
+
     ActiveRecord::Base.transaction do
       created_feeds = []
-  
+
       # 🔹 Main feed (requested type)
       main_feed = build_feed(feed_params[:feed_type])
       main_feed.save!
       attach_media(main_feed)
-  
+
       created_feeds << main_feed
-  
+
       # 🔹 If create_both = true AND local selected → also create global
-      if params[:create_both].to_s == "true" && feed_params[:feed_type] == "local"
+      if create_both
         global_feed = build_feed("global")
         global_feed.save!
         attach_media(global_feed)
-  
+
         created_feeds << global_feed
       end
   

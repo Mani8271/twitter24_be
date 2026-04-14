@@ -31,12 +31,46 @@ has_one :live_location, dependent: :destroy
  has_many :jobs, dependent: :destroy
  belongs_to :subscription_plan, optional: true
 
+ # ── Subscription snapshot helpers ─────────────────────────────────────────
+ # Limits, ranges, and features are snapshotted at subscription time so that
+ # admin edits to the plan never retroactively affect existing subscribers.
+ # Each method falls back to the live plan value for legacy users who have no
+ # snapshot yet (subscribed_at.nil?).
+
  def has_feature?(feature_key)
-   subscription_plan&.has_feature?(feature_key) || false
+   effective_features.include?(feature_key.to_s)
  end
 
  def feature_limit(feature_key)
-   subscription_plan&.limit_for(feature_key)
+   effective_limit(feature_key)
+ end
+
+ def effective_features
+   if subscribed_at.present? && subscribed_features.present?
+     subscribed_features
+   else
+     subscription_plan&.features || []
+   end
+ end
+
+ def effective_limit(feature_key)
+   key = feature_key.to_s
+   if subscribed_at.present? && subscribed_limits.key?(key)
+     val = subscribed_limits[key]
+     val.present? ? val.to_i : nil   # nil = unlimited
+   else
+     subscription_plan&.limit_for(key)
+   end
+ end
+
+ def effective_range(feature_key)
+   key = feature_key.to_s
+   if subscribed_at.present? && subscribed_ranges.key?(key)
+     val = subscribed_ranges[key]
+     val.present? ? val.to_i : nil
+   else
+     subscription_plan&.range_for(key)
+   end
  end
 
  has_many :followed_businesses,

@@ -1,4 +1,6 @@
 class JobsController < ApplicationController
+  include PlanAuthorized
+
   before_action :authorize_request
   before_action :set_job, only: [:show, :update, :destroy]
 
@@ -43,6 +45,9 @@ class JobsController < ApplicationController
 
   # POST /jobs
   def create
+    return unless require_feature!("job_posts")
+    return unless check_limit!("job_posts", current_user.jobs.count)
+
     job = current_user.jobs.build(job_params)
 
     if job.save

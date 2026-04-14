@@ -60,8 +60,14 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
 
   namespace :api do
     namespace :v1 do
-      get "subscriptions/plans", to: "subscriptions#plans"
+      get  "subscriptions/plans",     to: "subscriptions#plans"
+      post "subscriptions/subscribe", to: "subscriptions#subscribe"
     end
+  end
+
+  scope "/legal" do
+    get "/terms",          to: "legal#terms"
+    get "/privacy-policy", to: "legal#privacy_policy"
   end
 
 

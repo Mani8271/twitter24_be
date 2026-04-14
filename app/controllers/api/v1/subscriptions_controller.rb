@@ -1,6 +1,32 @@
 module Api
   module V1
     class SubscriptionsController < ApplicationController
+      # POST /api/v1/subscriptions/subscribe
+      # Body: { plan_id: <integer> }
+      def subscribe
+        plan = SubscriptionPlan.active.find_by(id: params[:plan_id])
+
+        unless plan
+          return render json: { error: "Plan not found or inactive" }, status: :not_found
+        end
+
+        if current_user.update(
+          subscription_plan_id:      plan.id,
+          is_subscription_completed: true,
+          # ── Snapshot the plan at this exact moment ───────────────────────
+          # Future admin edits to the plan will NOT affect this subscriber.
+          subscribed_features:       plan.features,
+          subscribed_limits:         plan.limits,
+          subscribed_ranges:         plan.ranges,
+          subscribed_at:             Time.current
+        )
+          render json: current_user, serializer: UserSerializer, status: :ok
+        else
+          render json: { errors: current_user.errors.full_messages },
+                 status: :unprocessable_entity
+        end
+      end
+
       # GET /api/v1/subscriptions/plans
       def plans
         subscription_plans = SubscriptionPlan.active

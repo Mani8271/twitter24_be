@@ -1,4 +1,6 @@
 class OffersController < ApplicationController
+    include PlanAuthorized
+
     before_action :authorize_request
     before_action :set_offer, only: [:show, :update, :destroy]
   
@@ -40,8 +42,11 @@ class OffersController < ApplicationController
   
     # POST /api/v1/offers
     def create
+      return unless require_feature!("offers")
+      return unless check_limit!("offers", current_user.offers.count)
+
       offer = current_user.offers.build(offer_params)
-  
+
       if offer.save
         render json: offer, status: :created
       else

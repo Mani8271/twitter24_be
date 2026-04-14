@@ -14,7 +14,8 @@ class UserSerializer < ActiveModel::Serializer
              :account_type,
              :email_verified,
              :phone_verified,
-             :followed_businesses_count
+             :followed_businesses_count,
+             :subscription_plan
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
@@ -68,6 +69,47 @@ class UserSerializer < ActiveModel::Serializer
 
   def followed_businesses_count
     object.followed_businesses.count
+  end
+
+  # ─── Subscription Plan ─────────────────────────────────────────────────
+  # Returns the limits/ranges/features the user locked in at subscription
+  # time — NOT the current live plan values.  Admin edits to the plan do not
+  # change what existing subscribers see or are allowed to do.
+  def subscription_plan
+    plan = object.subscription_plan
+    return nil unless plan
+
+    # Use the snapshotted feature list (falls back to live plan for legacy rows)
+    features = object.effective_features
+
+    limits = features.each_with_object({}) do |key, h|
+      val = object.effective_limit(key)
+      h[key] = val if val.present?
+    end
+
+    ranges = features.each_with_object({}) do |key, h|
+      val = object.effective_range(key)
+      h[key] = val if val.present?
+    end
+
+    # Usage counts — how many the user has created so far
+    usage = {
+      "offers"      => object.offers.count,
+      "job_posts"   => object.jobs.count,
+      "local_feed"  => object.global_feeds.where(feed_type: "local").count,
+      "global_feed" => object.global_feeds.where(feed_type: "global").count,
+    }
+
+    {
+      id:            plan.id,
+      type:          plan.plan_type,
+      features:      features,
+      limits:        limits,
+      ranges:        ranges,
+      amounts:       plan.amounts,
+      subscribed_at: object.subscribed_at,
+      usage:         usage
+    }
   end
 end
 
