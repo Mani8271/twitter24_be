@@ -4,7 +4,8 @@ ActiveAdmin.register SubscriptionPlan do
   permit_params :plan_type, :amounts, :position, :is_active,
                 features: [],
                 limits: SubscriptionPlan::FEATURES,
-                ranges: SubscriptionPlan::FEATURES
+                ranges: SubscriptionPlan::FEATURES,
+                disappear_days: SubscriptionPlan::FEATURES
 
   # ─── FILTERS ──────────────────────────────────────────────────────────────
   filter :plan_type
@@ -54,6 +55,18 @@ ActiveAdmin.register SubscriptionPlan do
           next span("—", style: "color:#94a3b8") unless resource.has_feature?(key)
           val = resource.range_for(key)
           val ? "#{val} km" : "Unlimited"
+        end
+      end
+    end
+
+    panel "Post Expiry (Disappear in Days)" do
+      table_for SubscriptionPlan::DISAPPEARABLE_FEATURES do
+        column("Feature") { |key| SubscriptionPlan::FEATURE_LABELS[key] || key }
+        column("Enabled") { |key| resource.has_feature?(key) ? "✅ Yes" : "—" }
+        column("Disappear in Days") do |key|
+          next span("—", style: "color:#94a3b8") unless resource.has_feature?(key)
+          val = resource.disappear_days_for(key)
+          val ? "#{val} days" : "Never"
         end
       end
     end
@@ -129,17 +142,22 @@ ActiveAdmin.register SubscriptionPlan do
               th style: "padding:10px 16px;text-align:left;color:#475569;font-weight:600;width:220px;" do
                 text_node "Range (km)"
               end
+              th style: "padding:10px 16px;text-align:left;color:#475569;font-weight:600;width:220px;" do
+                text_node "Disappear in Days"
+              end
             end
           end
 
           tbody do
             SubscriptionPlan::FEATURES.each do |key|
-              label     = SubscriptionPlan::FEATURE_LABELS[key] || key
-              enabled   = f.object.has_feature?(key)
-              cur_limit = f.object.limits&.dig(key)
-              cur_range = f.object.ranges&.dig(key)
-              has_limit = cur_limit.present?
-              has_range = cur_range.present?
+              label        = SubscriptionPlan::FEATURE_LABELS[key] || key
+              enabled      = f.object.has_feature?(key)
+              cur_limit    = f.object.limits&.dig(key)
+              cur_range    = f.object.ranges&.dig(key)
+              cur_disappear = f.object.disappear_days&.dig(key)
+              has_limit    = cur_limit.present?
+              has_range    = cur_range.present?
+              has_disappear = cur_disappear.present?
 
               tr id: "row-#{key}", style: "border-bottom:1px solid #e2e8f0;vertical-align:middle;" do
 
@@ -200,6 +218,32 @@ ActiveAdmin.register SubscriptionPlan do
                       <span style="font-size:12px;color:#94a3b8;">km</span>
                     </div>
                   HTML
+                end
+
+                # Disappear in Days cell — only for supported features
+                td style: "padding:8px 16px;" do
+                  if SubscriptionPlan::DISAPPEARABLE_FEATURES.include?(key)
+                    disappear_display = has_disappear ? "flex" : "none"
+                    text_node(<<~HTML.html_safe)
+                      <label style="display:flex;align-items:center;gap:8px;margin:0;">
+                        <input type="checkbox" id="set-disappear-#{key}" class="sub-chk" data-field="disappear"
+                          #{has_disappear ? "checked" : ""}
+                          #{enabled ? "" : "disabled style='opacity:0.35;'"}
+                          onchange="toggleSubField('#{key}', 'disappear', this.checked)"
+                          style="width:16px;height:16px;cursor:pointer;flex-shrink:0;">
+                        <span style="font-size:12px;color:#64748b;white-space:nowrap;">Set Days</span>
+                      </label>
+                      <div id="wrap-disappear-#{key}" style="display:#{disappear_display};align-items:center;gap:6px;margin-top:6px;">
+                        <input type="number" id="input-disappear-#{key}" name="subscription_plan[disappear_days][#{key}]"
+                          value="#{cur_disappear}" min="1"
+                          #{enabled && has_disappear ? "" : "disabled"}
+                          style="width:100px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;">
+                        <span style="font-size:12px;color:#94a3b8;">days</span>
+                      </div>
+                    HTML
+                  else
+                    span "—", style: "color:#94a3b8;font-size:13px;"
+                  end
                 end
 
               end

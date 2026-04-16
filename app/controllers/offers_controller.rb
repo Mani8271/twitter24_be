@@ -21,6 +21,12 @@ class OffersController < ApplicationController
       end
       offers = offers.where(user_id: params[:user_id]) if params[:user_id].present?
 
+      # Filter by business category
+      if params[:categories].present?
+        cats = params[:categories].split(",").map(&:strip).reject(&:blank?)
+        offers = offers.joins(user: :business).where(businesses: { category: cats }) if cats.any?
+      end
+
       total  = offers.count
       offers = offers.offset((page - 1) * per_page).limit(per_page)
 

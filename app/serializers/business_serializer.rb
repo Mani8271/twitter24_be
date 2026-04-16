@@ -6,6 +6,8 @@ class BusinessSerializer < ActiveModel::Serializer
              :user_id,
              :name,
              :category,
+             :keywords,
+             :video_links,
              :about,
              :year_established,
              :website,

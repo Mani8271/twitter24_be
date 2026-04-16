@@ -11,14 +11,15 @@ module Api
         end
 
         if current_user.update(
-          subscription_plan_id:      plan.id,
-          is_subscription_completed: true,
+          subscription_plan_id:         plan.id,
+          is_subscription_completed:    true,
           # ── Snapshot the plan at this exact moment ───────────────────────
           # Future admin edits to the plan will NOT affect this subscriber.
-          subscribed_features:       plan.features,
-          subscribed_limits:         plan.limits,
-          subscribed_ranges:         plan.ranges,
-          subscribed_at:             Time.current
+          subscribed_features:          plan.features,
+          subscribed_limits:            plan.limits,
+          subscribed_ranges:            plan.ranges,
+          subscribed_disappear_days:    plan.disappear_days,
+          subscribed_at:                Time.current
         )
           render json: current_user, serializer: UserSerializer, status: :ok
         else
@@ -34,7 +35,7 @@ module Api
         render json: subscription_plans.map { |plan|
           enabled = plan.features
 
-          # Only return limits/ranges for enabled features that actually have a value set
+          # Only return limits/ranges/disappear_days for enabled features that actually have a value set
           limits = enabled.each_with_object({}) do |key, h|
             val = plan.limit_for(key)
             h[key] = val if val.present?
@@ -45,14 +46,20 @@ module Api
             h[key] = val if val.present?
           end
 
+          disappear_days = (enabled & SubscriptionPlan::DISAPPEARABLE_FEATURES).each_with_object({}) do |key, h|
+            val = plan.disappear_days_for(key)
+            h[key] = val if val.present?
+          end
+
           {
-            id:            plan.id,
-            type:          plan.plan_type,
-            features:      enabled,
-            amounts:       plan.amounts,
-            is_subscribed: current_user.subscription_plan_id == plan.id,
-            limits:        limits,
-            ranges:        ranges,
+            id:             plan.id,
+            type:           plan.plan_type,
+            features:       enabled,
+            amounts:        plan.amounts,
+            is_subscribed:  current_user.subscription_plan_id == plan.id,
+            limits:         limits,
+            ranges:         ranges,
+            disappear_days: disappear_days,
           }
         }
       end

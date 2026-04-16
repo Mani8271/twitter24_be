@@ -1,4 +1,22 @@
 class Business < ApplicationRecord
+  CATEGORIES = [
+    "Food & Dining",
+    "Groceries",
+    "Electronics",
+    "Fashion & Apparel",
+    "Beauty & Wellness",
+    "Fitness & Sports",
+    "Healthcare",
+    "Education",
+    "Services",
+    "Retail",
+    "Real Estate",
+    "Automobiles",
+    "Hotels & Travel",
+    "Entertainment",
+    "Finance",
+  ].freeze
+
   belongs_to :user
 
   has_one :business_contact, dependent: :destroy
@@ -37,7 +55,7 @@ class Business < ApplicationRecord
   end
   
   def self.ransackable_attributes(auth_object = nil)
-    %w[id name category status about year_established website user_id created_at updated_at]
+    %w[id name category keywords status about year_established website user_id created_at updated_at]
   end
 
   def self.ransackable_associations(auth_object = nil)

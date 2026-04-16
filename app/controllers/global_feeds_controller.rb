@@ -270,10 +270,10 @@ class GlobalFeedsController < ApplicationController
       )
     end
 
-    # 4) CATEGORY filter (comma-separated list, e.g. "Food & Dining,Events")
+    # 4) CATEGORY filter — filter by the poster's business category
     if params[:categories].present?
       cats = params[:categories].split(",").map(&:strip).reject(&:blank?)
-      feeds = feeds.where(category: cats) if cats.any?
+      feeds = feeds.joins(user: :business).where(businesses: { category: cats }) if cats.any?
     end
 
     # 5) POST TYPE filter (text / image / video)

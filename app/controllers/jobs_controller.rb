@@ -21,6 +21,12 @@ class JobsController < ApplicationController
     jobs = jobs.where(post_type: params[:post_type]) if params[:post_type].present?
     jobs = jobs.by_search(params[:search])
 
+    # Filter by business category
+    if params[:categories].present?
+      cats = params[:categories].split(",").map(&:strip).reject(&:blank?)
+      jobs = jobs.joins(user: :business).where(businesses: { category: cats }) if cats.any?
+    end
+
     if params[:job_type].present?
       types = params[:job_type].split(",").map(&:strip)
       jobs = jobs.where(job_type: types)

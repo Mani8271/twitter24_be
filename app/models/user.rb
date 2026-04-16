@@ -98,7 +98,7 @@ has_one :live_location, dependent: :destroy
     end
   end
   def self.ransackable_attributes(auth_object = nil)
-    %w[id name email phone_number account_type status created_at updated_at]
+    %w[id name email phone_number account_type status is_active deleted_at created_at updated_at]
   end
 
   def self.ransackable_associations(auth_object = nil)

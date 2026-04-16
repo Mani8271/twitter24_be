@@ -79,6 +79,10 @@ class AuthController < ApplicationController
       return render json: { error: "This account has been deleted." }, status: :forbidden
     end
 
+    unless user.is_active
+      return render json: { error: "account_inactive" }, status: :forbidden
+    end
+
     token = JsonWebToken.encode({ user_id: user.id })
     exp = 1.year.from_now.strftime("%m-%d-%Y %H:%M")
 

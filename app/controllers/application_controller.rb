@@ -40,6 +40,10 @@ class ApplicationController < ActionController::Base
 
     decoded = JsonWebToken.decode(token)
     @current_user = User.find(decoded[:user_id])
+
+    unless @current_user.is_active
+      render json: { error: "account_inactive" }, status: :forbidden
+    end
   rescue ActiveRecord::RecordNotFound => e
     render json: { errors: e.message }, status: :unauthorized
   rescue JWT::DecodeError => e

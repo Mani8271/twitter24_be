@@ -50,7 +50,11 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   resources :likes, only: [:create, :destroy]   # plural
   resources :comments, only: [:index, :create, :destroy]
   resource :view, only: [:create]              # singular is okay
-  resources :businesses, only: [:index, :show]
+  resources :businesses, only: [:index, :show, :update] do
+    member do
+      get :related
+    end
+  end
   patch  "/businesses/online_status", to: "businesses#toggle_online"
   delete "/businesses/images/:blob_id", to: "businesses#delete_image"
   resources :reviews, only: [:index, :create]

@@ -17,6 +17,9 @@ class SubscriptionPlan < ApplicationRecord
   LIMITABLE_FEATURES = FEATURES.freeze
   RANGEABLE_FEATURES = FEATURES.freeze
 
+  # Only these features support post expiry (disappear in days).
+  DISAPPEARABLE_FEATURES = %w[global_feed local_feed job_posts offers].freeze
+
   # Human-readable labels shown in the admin UI and API responses.
   FEATURE_LABELS = {
     "global_feed"    => "Global Feed",
@@ -62,8 +65,15 @@ class SubscriptionPlan < ApplicationRecord
     val.present? ? val.to_i : nil
   end
 
+  # Returns the disappear-in-days value for a feature, or nil if unlimited.
+  def disappear_days_for(feature_key)
+    return nil unless has_feature?(feature_key)
+    val = disappear_days[feature_key.to_s]
+    val.present? ? val.to_i : nil
+  end
+
   def self.ransackable_attributes(auth_object = nil)
-    %w[amounts created_at features id is_active limits ranges plan_type position updated_at]
+    %w[amounts created_at disappear_days features id is_active limits ranges plan_type position updated_at]
   end
 
   def self.ransackable_associations(auth_object = nil)
@@ -79,7 +89,10 @@ class SubscriptionPlan < ApplicationRecord
 
   # Remove blank/zero entries so nil = truly unlimited, not submitted-but-empty
   def strip_blank_limits_and_ranges
-    self.limits = (limits || {}).reject { |_, v| v.to_s.strip.blank? }
-    self.ranges = (ranges || {}).reject { |_, v| v.to_s.strip.blank? }
+    self.limits        = (limits        || {}).reject { |_, v| v.to_s.strip.blank? }
+    self.ranges        = (ranges        || {}).reject { |_, v| v.to_s.strip.blank? }
+    self.disappear_days = (disappear_days || {})
+                          .select { |k, _| DISAPPEARABLE_FEATURES.include?(k) }
+                          .reject { |_, v| v.to_s.strip.blank? }
   end
 end

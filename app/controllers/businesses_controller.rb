@@ -16,11 +16,17 @@ class BusinessesController < ApplicationController
                   businesses = businesses.where(user_id: current_user.id)
                 else
                   businesses = businesses.where.not(user_id: current_user.id)
-                end            
+                end
   # ✅ Filter for favorites if query param is present
   if params[:favourites].to_s.downcase == "true"
     businesses = businesses.joins(:likes)
                            .where(likes: { user_id: current_user.id })
+  end
+
+  # ✅ Filter by category
+  if params[:categories].present?
+    cats = params[:categories].split(",").map(&:strip).reject(&:blank?)
+    businesses = businesses.where(category: cats) if cats.any?
   end
 
   render json: businesses,
@@ -41,6 +47,43 @@ def update
     render json: { errors: business.errors.full_messages },
            status: :unprocessable_entity
   end
+end
+
+# =========================================================
+# 🔗 RELATED BUSINESSES
+# GET /businesses/:id/related
+# =========================================================
+def related
+  business = Business.includes(:business_location).find(params[:id])
+  loc      = business.business_location
+  user_loc = @user_location
+
+  # Collect same-category businesses (excluding the current one)
+  same_cat = Business
+               .includes(:business_location, :business_hours, :business_contact,
+                         profile_picture_attachment: :blob)
+               .where(status: "approved")
+               .where(category: business.category)
+               .where.not(id: business.id)
+               .limit(6)
+
+  results = same_cat.to_a
+
+  # If fewer than 3, fill with nearby businesses from other categories
+  if results.size < 3
+    other = Business
+              .includes(:business_location, :business_hours, :business_contact,
+                        profile_picture_attachment: :blob)
+              .where(status: "approved")
+              .where.not(id: [business.id] + results.map(&:id))
+              .where.not(category: business.category)
+              .limit(6 - results.size)
+    results += other.to_a
+  end
+
+  render json: results,
+         each_serializer: BusinessSerializer,
+         scope: current_user
 end
 
 
@@ -98,6 +141,15 @@ end
   # =========================================================
   def set_user_location
     @user_location = current_user.live_locations.find_by(live_location_default: true)
+  end
+
+  def business_params
+    params.require(:business).permit(
+      :name, :category, :about, :year_established, :website,
+      keywords:         [],
+      video_links:      [],
+      products_services: []
+    )
   end
 end
 
