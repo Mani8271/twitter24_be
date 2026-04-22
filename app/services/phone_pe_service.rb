@@ -23,6 +23,12 @@ class PhonePeService
   end
 
   def initiate_payment(merchant_order_id:, amount_in_paise:, redirect_url:)
+    # PHONEPE_BYPASS=true set chesthe real API skip avutundi — testing only
+    if ENV["PHONEPE_BYPASS"] == "true"
+      Rails.logger.info "[PhonePe] BYPASS mode — skipping real payment"
+      return { success: true, redirect_url: redirect_url, order_id: merchant_order_id }
+    end
+
     token = fetch_access_token
     return { success: false, message: token[:error] } if token[:error]
 
@@ -50,6 +56,11 @@ class PhonePeService
   end
 
   def check_status(merchant_order_id)
+    if ENV["PHONEPE_BYPASS"] == "true"
+      Rails.logger.info "[PhonePe] BYPASS mode — returning COMPLETED"
+      return { success: true, state: "COMPLETED", order_id: merchant_order_id, data: {} }
+    end
+
     token = fetch_access_token
     return { success: false, state: "FAILED", message: token[:error] } if token[:error]
 
@@ -71,50 +82,28 @@ class PhonePeService
   def fetch_access_token
     Rails.logger.info "[PhonePe] fetching token from #{@token_url}"
 
-    # Try 1: Basic Auth + form body (standard OAuth 2.0 client credentials)
-    response = token_with_basic_auth
-    Rails.logger.info "[PhonePe] token(basic_auth) status=#{response.code} body=#{response.body}"
-    body = parse_json(response.body)
-    return { access_token: body["access_token"] } if response.code.to_i == 200 && body["access_token"].present?
-
-    # Try 2: JSON body with client creds (PhonePe proprietary)
-    response = token_with_json_body
-    Rails.logger.info "[PhonePe] token(json_body) status=#{response.code} body=#{response.body}"
+    response = token_with_form_body
+    Rails.logger.info "[PhonePe] token status=#{response.code} body=#{response.body}"
     body = parse_json(response.body)
     return { access_token: body["access_token"] } if response.code.to_i == 200 && body["access_token"].present?
 
     { error: body["message"] || "Failed to get PhonePe token" }
   end
 
-  def token_with_basic_auth
+  # PhonePe Checkout v2 OAuth: all credentials must be in form-encoded body
+  def token_with_form_body
     uri  = URI(@token_url)
     http = build_http(uri)
 
     req = Net::HTTP::Post.new(uri.request_uri)
     req["Content-Type"] = "application/x-www-form-urlencoded"
     req["Accept"]       = "application/json"
-    req.basic_auth(@client_id, @client_secret)
     req.body = URI.encode_www_form(
       grant_type:     "client_credentials",
-      client_version: @client_version
-    )
-
-    http.request(req)
-  end
-
-  def token_with_json_body
-    uri  = URI(@token_url)
-    http = build_http(uri)
-
-    req = Net::HTTP::Post.new(uri.request_uri)
-    req["Content-Type"] = "application/json"
-    req["Accept"]       = "application/json"
-    req.body = {
       client_id:      @client_id,
       client_secret:  @client_secret,
-      grant_type:     "client_credentials",
       client_version: @client_version
-    }.to_json
+    )
 
     http.request(req)
   end
