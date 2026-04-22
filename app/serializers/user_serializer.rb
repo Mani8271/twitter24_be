@@ -92,9 +92,9 @@ class UserSerializer < ActiveModel::Serializer
       h[key] = val if val.present?
     end
 
-    # Usage counts — how many the user has created so far
+    # Usage counts — active posts only (matches controller limit check)
     usage = {
-      "offers"      => object.offers.count,
+      "offers"      => object.offers.active.count,
       "job_posts"   => object.jobs.count,
       "local_feed"  => object.global_feeds.where(feed_type: "local").count,
       "global_feed" => object.global_feeds.where(feed_type: "global").count,

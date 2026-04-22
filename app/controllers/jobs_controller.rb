@@ -52,7 +52,7 @@ class JobsController < ApplicationController
   # POST /jobs
   def create
     return unless require_feature!("job_posts")
-    return unless check_limit!("job_posts", current_user.jobs.count)
+    return unless check_limit!("job_posts", current_user.jobs.active.count)
 
     job = current_user.jobs.build(job_params)
 

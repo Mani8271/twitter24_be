@@ -49,7 +49,7 @@ class OffersController < ApplicationController
     # POST /api/v1/offers
     def create
       return unless require_feature!("offers")
-      return unless check_limit!("offers", current_user.offers.count)
+      return unless check_limit!("offers", current_user.offers.active.count)
 
       offer = current_user.offers.build(offer_params)
 
