@@ -24,6 +24,7 @@ class BusinessSerializer < ActiveModel::Serializer
              :is_online,
              :open_days,
              :open_time,
+             :business_hours_schedule,
              :phone,
              :address,
              :distance_km,
@@ -83,6 +84,18 @@ end
     return nil unless today
 
     "#{today.opens_at.strftime('%I:%M %p')} - #{today.closes_at.strftime('%I:%M %p')}"
+  end
+
+  def business_hours_schedule
+    day_names = %w[Sun Mon Tue Wed Thu Fri Sat]
+    object.business_hours.sort_by(&:day_of_week).map do |h|
+      {
+        day:       day_names[h.day_of_week],
+        is_open:   h.is_open,
+        opens_at:  h.is_open && h.opens_at  ? h.opens_at.strftime('%I:%M %p')  : nil,
+        closes_at: h.is_open && h.closes_at ? h.closes_at.strftime('%I:%M %p') : nil,
+      }
+    end
   end
 
   # =================================

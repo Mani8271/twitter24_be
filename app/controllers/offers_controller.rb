@@ -21,6 +21,14 @@ class OffersController < ApplicationController
       end
       offers = offers.where(user_id: params[:user_id]) if params[:user_id].present?
 
+      if params[:q].present?
+        like = "%#{params[:q].downcase}%"
+        offers = offers.where(
+          "LOWER(title) LIKE :q OR LOWER(description) LIKE :q OR LOWER(tags) LIKE :q",
+          q: like
+        )
+      end
+
       # Filter by business category
       if params[:categories].present?
         cats = params[:categories].split(",").map(&:strip).reject(&:blank?)

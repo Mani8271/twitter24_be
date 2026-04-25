@@ -243,6 +243,13 @@ class GlobalFeedsController < ApplicationController
     if params[:scope] == "my"
       feeds = GlobalFeed.where(user_id: current_user.id).order(created_at: :desc)
       feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
+      if params[:q].present?
+        like = "%#{params[:q].downcase}%"
+        feeds = feeds.where(
+          "LOWER(title) LIKE :q OR LOWER(description) LIKE :q OR LOWER(category) LIKE :q",
+          q: like
+        )
+      end
       total = feeds.count
       feeds = feeds.offset((page - 1) * per_page).limit(per_page)
       return render json: {

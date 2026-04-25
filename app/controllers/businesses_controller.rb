@@ -29,6 +29,15 @@ class BusinessesController < ApplicationController
     businesses = businesses.where(category: cats) if cats.any?
   end
 
+  # ✅ Search by name / category / about
+  if params[:search].present?
+    q = "%#{params[:search].downcase}%"
+    businesses = businesses.where(
+      "LOWER(businesses.name) LIKE :q OR LOWER(businesses.category) LIKE :q OR LOWER(businesses.about) LIKE :q",
+      q: q
+    )
+  end
+
   render json: businesses,
          each_serializer: BusinessSerializer,
          scope: current_user
