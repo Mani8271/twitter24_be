@@ -83,6 +83,13 @@ class AuthController < ApplicationController
       return render json: { error: "account_inactive" }, status: :forbidden
     end
 
+    unless user.phone_verified
+      return render json: {
+        error: "phone_not_verified",
+        phone_number: user.phone_number
+      }, status: :forbidden
+    end
+
     token = JsonWebToken.encode({ user_id: user.id })
     exp = 1.year.from_now.strftime("%m-%d-%Y %H:%M")
 
@@ -166,9 +173,7 @@ class AuthController < ApplicationController
       :locale,
       :currency_pref,
       :zone_location_id,
-        :account_type, 
-      :email_verified,     
-      :phone_verified 
+        :account_type
     )
   end
 end
