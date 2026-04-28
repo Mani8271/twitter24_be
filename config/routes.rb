@@ -67,6 +67,7 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
       get  "subscriptions/plans",     to: "subscriptions#plans"
       post "subscriptions/subscribe", to: "subscriptions#subscribe"
 
+      get  "payments/history",            to: "payments#history"
       post "payments/initiate",          to: "payments#initiate"
       get  "payments/status/:merchant_transaction_id", to: "payments#status", as: :payment_status
       post "payments/webhook",           to: "payments#webhook"

@@ -15,7 +15,8 @@ class UserSerializer < ActiveModel::Serializer
              :email_verified,
              :phone_verified,
              :followed_businesses_count,
-             :subscription_plan
+             :subscription_plan,
+             :billing_address
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
@@ -71,6 +72,13 @@ class UserSerializer < ActiveModel::Serializer
     object.followed_businesses.count
   end
 
+  # ─── Billing Address ───────────────────────────────────────────────────
+  def billing_address
+    loc = object.business&.business_location
+    return nil unless loc
+    [loc.address_line1, loc.address_line2, loc.city, loc.state].compact.reject(&:blank?).join(", ")
+  end
+
   # ─── Subscription Plan ─────────────────────────────────────────────────
   # Returns the limits/ranges/features the user locked in at subscription
   # time — NOT the current live plan values.  Admin edits to the plan do not
@@ -101,14 +109,16 @@ class UserSerializer < ActiveModel::Serializer
     }
 
     {
-      id:            plan.id,
-      type:          plan.plan_type,
-      features:      features,
-      limits:        limits,
-      ranges:        ranges,
-      amounts:       plan.amounts,
+      id:           plan.id,
+      type:         plan.plan_type,
+      features:     features,
+      limits:       limits,
+      ranges:       ranges,
+      amounts:      plan.amounts,
       subscribed_at: object.subscribed_at,
-      usage:         usage
+      expires_at:   object.subscription_expires_at,
+      is_expired:   object.subscription_expires_at.present? && object.subscription_expires_at < Time.current,
+      usage:        usage
     }
   end
 end

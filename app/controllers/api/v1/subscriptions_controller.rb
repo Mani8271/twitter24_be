@@ -19,7 +19,8 @@ module Api
           subscribed_limits:            plan.limits,
           subscribed_ranges:            plan.ranges,
           subscribed_disappear_days:    plan.disappear_days,
-          subscribed_at:                Time.current
+          subscribed_at:                Time.current,
+          subscription_expires_at:      Time.current + 30.days
         )
           render json: current_user, serializer: UserSerializer, status: :ok
         else

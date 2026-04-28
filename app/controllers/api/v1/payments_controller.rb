@@ -6,6 +6,26 @@ module Api
       skip_before_action :verify_authenticity_token, only: [:webhook]
       skip_before_action :authorize_request,         only: [:webhook]
 
+      # GET /api/v1/payments/history
+      def history
+        payments = current_user.payments
+                               .includes(:subscription_plan)
+                               .order(created_at: :desc)
+                               .limit(50)
+
+        render json: payments.map { |p|
+          {
+            id:                      p.id,
+            date:                    p.paid_at || p.created_at,
+            merchant_transaction_id: p.merchant_transaction_id,
+            plan:                    p.subscription_plan.plan_type,
+            amount:                  p.amount_in_rupees,
+            gst_in:                  p.gst_in,
+            status:                  p.status,
+          }
+        }
+      end
+
       # POST /api/v1/payments/initiate
       # Body: { plan_id, merchant_transaction_id, redirect_url, gst_in? }
       def initiate
@@ -138,7 +158,8 @@ module Api
           subscribed_limits:         plan.limits,
           subscribed_ranges:         plan.ranges,
           subscribed_disappear_days: plan.disappear_days,
-          subscribed_at:             Time.current
+          subscribed_at:             Time.current,
+          subscription_expires_at:   Time.current + 30.days
         )
       end
 

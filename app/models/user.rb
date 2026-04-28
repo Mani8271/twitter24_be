@@ -30,6 +30,7 @@ has_one :live_location, dependent: :destroy
  has_many :offers, dependent: :destroy
  has_many :jobs, dependent: :destroy
  belongs_to :subscription_plan, optional: true
+ has_many :payments, dependent: :nullify
 
  # ── Subscription snapshot helpers ─────────────────────────────────────────
  # Limits, ranges, and features are snapshotted at subscription time so that
