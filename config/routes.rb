@@ -30,6 +30,9 @@ Rails.application.routes.draw do
     post  "/step5", to: "onboarding#step5_documents"
     post  "/step6", to: "onboarding#step6_images"
 
+    post  "/send_contact_otp",   to: "onboarding#send_contact_otp"
+    post  "/verify_contact_otp", to: "onboarding#verify_contact_otp"
+
     get   "/status", to: "onboarding#status"
     get "/step1", to: "onboarding#get_step1"
     get "/step2", to: "onboarding#get_step2"

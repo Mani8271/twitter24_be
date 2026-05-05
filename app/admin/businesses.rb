@@ -2,7 +2,7 @@ ActiveAdmin.register Business do
   menu label: "Businesses", priority: 2
 
   permit_params :user_id, :status, :name, :category, :year_established,
-                :website, :about, products_services: []
+                :website, :about, :rejection_reason, products_services: []
 
   # ─── SCOPES ───────────────────────────────────────────────────────────────
   scope :all, default: true
@@ -24,9 +24,11 @@ ActiveAdmin.register Business do
     redirect_to collection_path, notice: "#{ids.size} business(es) approved."
   end
 
-  batch_action :reject, confirm: "Reject selected businesses? Owners will be notified by email." do |ids|
+  batch_action :reject,
+               form: { rejection_reason: :textarea } do |ids, inputs|
+    reason = inputs[:rejection_reason].presence
     Business.where(id: ids).each do |b|
-      b.update!(status: "rejected")
+      b.update!(status: "rejected", rejection_reason: reason)
       OnboardingMailer.rejection_notification(b.user, b).deliver_now rescue nil
     end
     redirect_to collection_path, notice: "#{ids.size} business(es) rejected. Owners notified."
@@ -34,13 +36,19 @@ ActiveAdmin.register Business do
 
   # ─── MEMBER ACTIONS ───────────────────────────────────────────────────────
   member_action :approve, method: :put do
-    resource.update!(status: "approved")
+    resource.update!(status: "approved", rejection_reason: nil)
     redirect_to admin_business_path(resource),
                 notice: "✅ #{resource.name} has been approved."
   end
 
-  member_action :reject, method: :put do
-    resource.update!(status: "rejected")
+  member_action :reject, method: :get do
+    @business = resource
+    render :reject
+  end
+
+  member_action :do_reject, method: :post do
+    reason = params[:rejection_reason].presence
+    resource.update!(status: "rejected", rejection_reason: reason)
     OnboardingMailer.rejection_notification(resource.user, resource).deliver_now
     redirect_to admin_business_path(resource),
                 notice: "❌ #{resource.name} has been rejected. Owner notified by email."
@@ -77,14 +85,12 @@ ActiveAdmin.register Business do
                          style: "color:#16a34a; font-weight:700;",
                          data: { confirm: "Approve #{b.name}?" })
         links << link_to("❌ Reject", reject_admin_business_path(b),
-                         method: :put, class: "member_link",
-                         style: "color:#dc2626; font-weight:700;",
-                         data: { confirm: "Reject #{b.name}? Owner will be notified by email." })
+                         class: "member_link",
+                         style: "color:#dc2626; font-weight:700;")
       elsif b.status == "approved"
         links << link_to("⚠️ Revoke", reject_admin_business_path(b),
-                         method: :put, class: "member_link",
-                         style: "color:#dc2626; font-weight:700;",
-                         data: { confirm: "Revoke approval for #{b.name}?" })
+                         class: "member_link",
+                         style: "color:#dc2626; font-weight:700;")
       end
       safe_join(links, " | ")
     end
@@ -108,14 +114,19 @@ ActiveAdmin.register Business do
                   style: "background:#16a34a;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;text-decoration:none;",
                   data: { confirm: "Approve #{resource.name}?" }
           link_to "❌ Reject", reject_admin_business_path(resource),
-                  method: :put, class: "button",
-                  style: "background:#dc2626;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;text-decoration:none;",
-                  data: { confirm: "Reject #{resource.name}? Owner will be notified by email." }
+                  class: "button",
+                  style: "background:#dc2626;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;text-decoration:none;"
         elsif resource.status == "approved"
           link_to "⚠️ Revoke Approval", reject_admin_business_path(resource),
-                  method: :put, class: "button",
-                  style: "background:#dc2626;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;text-decoration:none;",
-                  data: { confirm: "Revoke approval for #{resource.name}?" }
+                  class: "button",
+                  style: "background:#dc2626;color:#fff;padding:8px 20px;border-radius:8px;font-weight:700;text-decoration:none;"
+        end
+      end
+
+      if resource.status == "rejected" && resource.rejection_reason.present?
+        div style: "margin-top:12px; padding:14px 18px; background:#fee2e2; border:1px solid #fca5a5; border-radius:8px;" do
+          para "Rejection Reason:", style: "font-weight:700; font-size:13px; color:#dc2626; margin:0 0 6px;"
+          para resource.rejection_reason, style: "font-size:14px; color:#991b1b; margin:0; white-space:pre-wrap;"
         end
       end
     end

@@ -1,0 +1,46 @@
+<%
+  page_title = "Reject: #{@business.name}"
+%>
+
+<div style="max-width:640px; margin:0 auto; padding:24px 0;">
+  <div style="background:#fff; border-radius:12px; border:1px solid #fca5a5; overflow:hidden; box-shadow:0 2px 12px rgba(220,38,38,0.08);">
+
+    <div style="background:linear-gradient(90deg,#dc2626 0%,#f97316 100%); padding:20px 28px;">
+      <h2 style="color:#fff; margin:0; font-size:18px;">❌ Reject Business Application</h2>
+      <p style="color:rgba(255,255,255,0.85); margin:6px 0 0; font-size:14px;">
+        <%= @business.name %> &mdash; <%= @business.category %>
+      </p>
+    </div>
+
+    <div style="padding:28px;">
+      <p style="font-size:14px; color:#374151; margin:0 0 20px;">
+        Provide a clear reason for rejection. This message will be shown to the business owner
+        inside the app and sent via email so they know exactly what to fix before resubmitting.
+      </p>
+
+      <%= form_tag do_reject_admin_business_path(@business), method: :post do %>
+        <div style="margin-bottom:20px;">
+          <label style="display:block; font-size:13px; font-weight:700; color:#374151; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.4px;">
+            Rejection Reason <span style="color:#dc2626;">*</span>
+          </label>
+          <%= text_area_tag :rejection_reason, nil,
+                rows: 5,
+                required: true,
+                placeholder: "e.g. Documents are blurry or unreadable. GSTIN could not be verified. Please re-upload clear copies of all documents and ensure your business details are accurate.",
+                style: "width:100%; padding:12px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; color:#111827; resize:vertical; box-sizing:border-box; font-family:inherit; line-height:1.5;" %>
+          <p style="font-size:12px; color:#6b7280; margin:6px 0 0;">
+            This reason will be visible to the business owner in the app and included in the rejection email.
+          </p>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <%= submit_tag "Confirm Rejection & Notify Owner",
+                style: "background:#dc2626; color:#fff; border:none; padding:11px 24px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer;" %>
+          <%= link_to "Cancel", admin_business_path(@business),
+                style: "display:inline-block; background:#f3f4f6; color:#374151; padding:11px 24px; border-radius:8px; font-size:14px; font-weight:600; text-decoration:none;" %>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+</div>

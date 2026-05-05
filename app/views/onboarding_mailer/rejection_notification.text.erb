@@ -1,6 +1,12 @@
 Hi <%= @user&.name %>,
 
 We regret to inform you that your business application for "<%= @business.name %>" has NOT been approved after our review.
+<% if @rejection_reason.present? %>
+
+REASON FOR REJECTION
+---------------------
+<%= @rejection_reason %>
+<% end %>
 
 APPLICATION DETAILS
 -------------------

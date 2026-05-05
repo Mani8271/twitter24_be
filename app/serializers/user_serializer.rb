@@ -20,6 +20,7 @@ class UserSerializer < ActiveModel::Serializer
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
+  attribute :rejection_reason, if: :business_account?
   attribute :onboarding_completed, if: :business_account?
   attribute :current_step, if: :business_account?
   attribute :steps_completed, if: :business_account?
@@ -38,6 +39,10 @@ class UserSerializer < ActiveModel::Serializer
   # -------------------------------
   def status
     object.business&.status
+  end
+
+  def rejection_reason
+    object.business&.rejection_reason
   end
 
   # -------------------------------

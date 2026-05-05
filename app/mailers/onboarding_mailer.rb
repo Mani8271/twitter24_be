@@ -14,9 +14,10 @@ class OnboardingMailer < ApplicationMailer
   end
 
   def rejection_notification(user, business)
-    @user     = user
-    @business = business
-    @contact  = business.business_contact
+    @user             = user
+    @business         = business
+    @contact          = business.business_contact
+    @rejection_reason = business.rejection_reason
 
     recipient = @contact&.owner_email.presence ||
                 @contact&.contact_email.presence ||
@@ -24,9 +25,9 @@ class OnboardingMailer < ApplicationMailer
 
     return unless recipient.present?
 
-    # mail(
-    #   to:      recipient,
-    #   subject: "Your Business Application Was Not Approved — #{business.name}"
-    # )
+    mail(
+      to:      recipient,
+      subject: "Your Business Application Was Not Approved — #{business.name}"
+    )
   end
 end

@@ -29,7 +29,7 @@ class OnboardingController < ApplicationController
     if business.update(step1_params)
         
       mark_step_done(1)
-      render json: { message: "Step 1 saved", progress: progress }, status: :ok
+      render json: { message: "Successfully saved details", progress: progress }, status: :ok
     else
       render json: { errors: business.errors.full_messages }, status: :unprocessable_entity
     end
@@ -43,7 +43,7 @@ class OnboardingController < ApplicationController
 
     if contact.update(step2_params)
       mark_step_done(2)
-      render json: { message: "Step 2 saved", progress: progress }, status: :ok
+      render json: { message: "Successfully saved details", progress: progress }, status: :ok
     else
       render json: { errors: contact.errors.full_messages }, status: :unprocessable_entity
     end
@@ -57,7 +57,7 @@ class OnboardingController < ApplicationController
 
     if location.update(step3_params)
       mark_step_done(3)
-      render json: { message: "Step 3 saved", progress: progress }, status: :ok
+      render json: { message: "Successfully saved details", progress: progress }, status: :ok
     else
       render json: { errors: location.errors.full_messages }, status: :unprocessable_entity
     end
@@ -84,7 +84,7 @@ class OnboardingController < ApplicationController
     end
 
     mark_step_done(4)
-    render json: { message: "Step 4 saved", progress: progress }, status: :ok
+    render json: { message: "Successfully saved details", progress: progress }, status: :ok
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages }, status: :unprocessable_entity
   end
@@ -97,7 +97,7 @@ class OnboardingController < ApplicationController
 
     if doc.update(step5_params)
       mark_step_done(5)
-      render json: { message: "Step 5 saved", progress: progress }, status: :ok
+      render json: { message: "Successfully saved details", progress: progress }, status: :ok
     else
       render json: { errors: doc.errors.full_messages }, status: :unprocessable_entity
     end
@@ -119,19 +119,59 @@ class OnboardingController < ApplicationController
       business.shop_images.attach(params[:shop_images])
     end
 
-    # Validate at least 1 image if your UI requires
-    if !business.profile_picture.attached? && business.shop_images.blank?
-      return render json: { error: "Upload profile_picture or shop_images" }, status: :bad_request
+    if business.shop_images.count < 3
+      return render json: { error: "Please upload at least 3 shop images." }, status: :bad_request
     end
 
     mark_step_done(6)
 
     if progress.completed
-      business.update!(status: "submitted")
+      business.update!(status: "submitted", rejection_reason: nil)
       OnboardingMailer.admin_review_notification(current_user, business).deliver_now
     end
 
-    render json: { message: "Step 6 saved", progress: progress }, status: :ok
+    render json: { message: "Successfully saved details", progress: progress }, status: :ok
+  end
+
+  # ===================== CONTACT OTP =====================
+  # POST /onboarding/send_contact_otp
+  def send_contact_otp
+    phone_number = params[:phone_number]
+    return render(json: { error: "phone_number is required" }, status: :bad_request) if phone_number.blank?
+
+    otp = loop do
+      candidate = rand(100000..999999).to_s
+      break candidate unless OtpCode.exists?(otp_number: candidate)
+    end
+
+    OtpCode.create!(
+      user_id:    current_user.id.to_s,
+      phone_number: phone_number,
+      otp_number: otp,
+      otp_expiry: 5.minutes.from_now
+    )
+
+    Rails.logger.info "[ContactOTP] #{phone_number}: #{otp}"
+    render json: { message: "OTP sent to #{phone_number}", otp: otp }, status: :ok
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { error: "Could not generate OTP. Please try again." }, status: :unprocessable_entity
+  end
+
+  # POST /onboarding/verify_contact_otp
+  def verify_contact_otp
+    phone_number = params[:phone_number]
+    otp_input    = params[:otp]
+    return render(json: { error: "phone_number and otp are required" }, status: :bad_request) if phone_number.blank? || otp_input.blank?
+
+    otp_record = OtpCode.where(user_id: current_user.id.to_s, phone_number: phone_number)
+                        .order(created_at: :desc)
+                        .first
+
+    return render(json: { error: "Invalid OTP" }, status: :unauthorized) unless otp_record&.otp_number == otp_input
+    return render(json: { error: "OTP expired. Please request a new one." }, status: :unauthorized) if otp_record.otp_expiry < Time.current
+
+    otp_record.destroy
+    render json: { message: "Phone number verified successfully" }, status: :ok
   end
 
   # ===================== STATUS =====================
@@ -223,7 +263,12 @@ end
       :owner_name,
       :owner_phone,
       :owner_phone_verified,
-      :owner_email
+      :owner_email,
+      :address_line1,
+      :address_line2,
+      :city,
+      :state,
+      :pincode
     )
   end
 
