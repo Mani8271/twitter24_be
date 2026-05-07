@@ -219,6 +219,7 @@
 
 class GlobalFeedsController < ApplicationController
   include PlanAuthorized
+  include BusinessAuthorized
 
   before_action :authorize_request
   before_action :set_global_feed, only: [:show, :update, :destroy]
@@ -394,6 +395,8 @@ class GlobalFeedsController < ApplicationController
   #   end
   # end
   def create
+    return unless require_business!
+
     # ── Plan check ─────────────────────────────────────────────────────────
     requested_type  = feed_params[:feed_type]
     feature_key     = requested_type == "local" ? "local_feed" : "global_feed"
@@ -439,6 +442,7 @@ class GlobalFeedsController < ApplicationController
   
 
   def update
+    return unless require_business!
     return render json: { error: "Not authorized" }, status: :forbidden if @global_feed.user != current_user
 
     @global_feed.assign_attributes(feed_params.except(:media))
@@ -460,6 +464,7 @@ class GlobalFeedsController < ApplicationController
   end
 
   def destroy
+    return unless require_business!
     return render json: { error: "Not authorized" }, status: :forbidden if @global_feed.user != current_user
 
     @global_feed.destroy

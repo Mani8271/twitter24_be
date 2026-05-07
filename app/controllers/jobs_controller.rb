@@ -1,5 +1,6 @@
 class JobsController < ApplicationController
   include PlanAuthorized
+  include BusinessAuthorized
 
   before_action :authorize_request
   before_action :set_job, only: [:show, :update, :destroy]
@@ -51,6 +52,7 @@ class JobsController < ApplicationController
 
   # POST /jobs
   def create
+    return unless require_business!
     return unless require_feature!("job_posts")
     return unless check_limit!("job_posts", current_user.jobs.active.count)
 
@@ -65,6 +67,7 @@ class JobsController < ApplicationController
 
   # PUT /jobs/:id
   def update
+    return unless require_business!
     return unauthorized unless @job.user_id == current_user.id
 
     if @job.update(job_params)
@@ -76,6 +79,7 @@ class JobsController < ApplicationController
 
   # DELETE /jobs/:id
   def destroy
+    return unless require_business!
     return unauthorized unless @job.user_id == current_user.id
 
     @job.destroy

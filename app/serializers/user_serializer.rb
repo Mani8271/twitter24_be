@@ -16,7 +16,8 @@ class UserSerializer < ActiveModel::Serializer
              :phone_verified,
              :followed_businesses_count,
              :subscription_plan,
-             :billing_address
+             :billing_address,
+             :feature_blocks
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
@@ -82,6 +83,29 @@ class UserSerializer < ActiveModel::Serializer
     loc = object.business&.business_location
     return nil unless loc
     [loc.address_line1, loc.address_line2, loc.city, loc.state].compact.reject(&:blank?).join(", ")
+  end
+
+  # ─── Feature Blocks ────────────────────────────────────────────────────
+  # Drives sidebar navigation and frontend feature-access checks.
+  # The set of features is determined by account_type, not subscription plan —
+  # all users can browse every section; posting rights are enforced separately.
+  def feature_blocks
+    base = [
+      { feature: "local_feed",  url: "dashboard/local-feeds"  },
+      { feature: "global_feed", url: "dashboard/global-feeds" },
+      { feature: "radius",      url: "dashboard/radius"       },
+      { feature: "vacancies",   url: "dashboard/vacancies"    },
+      { feature: "offers",      url: "dashboard/offers"       },
+    ]
+
+    if business_account?
+      base + [
+        { feature: "my_domain",   url: "dashboard/my-domain"         },
+        { feature: "subscription", url: "dashboard/subscription-plans" },
+      ]
+    else
+      base
+    end
   end
 
   # ─── Subscription Plan ─────────────────────────────────────────────────

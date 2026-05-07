@@ -1,5 +1,6 @@
 class OffersController < ApplicationController
     include PlanAuthorized
+    include BusinessAuthorized
 
     before_action :authorize_request
     before_action :set_offer, only: [:show, :update, :destroy]
@@ -56,6 +57,7 @@ class OffersController < ApplicationController
   
     # POST /api/v1/offers
     def create
+      return unless require_business!
       return unless require_feature!("offers")
       return unless check_limit!("offers", current_user.offers.active.count)
 
@@ -70,6 +72,7 @@ class OffersController < ApplicationController
   
     # PUT /api/v1/offers/:id
     def update
+      return unless require_business!
       return unauthorized unless @offer.user_id == current_user.id
   
       if @offer.update(offer_params)
@@ -81,6 +84,7 @@ class OffersController < ApplicationController
   
     # DELETE /api/v1/offers/:id
     def destroy
+      return unless require_business!
       return unauthorized unless @offer.user_id == current_user.id
   
       @offer.destroy
