@@ -129,25 +129,36 @@ class UserSerializer < ActiveModel::Serializer
       h[key] = val if val.present?
     end
 
-    # Usage counts — active posts only (matches controller limit check)
+    disappear_days = (features & SubscriptionPlan::DISAPPEARABLE_FEATURES).each_with_object({}) do |key, h|
+      val = object.effective_disappear_days(key)
+      h[key] = val if val.present?
+    end
+
+    # Usage counts — cumulative posts created this subscription cycle.
+    # These counters increment on create and never decrement on delete/expire,
+    # so deleting a post does not restore the quota. They reset when the user
+    # starts a new subscription cycle (subscribe / cancel + re-subscribe).
+    # domain_uploads is active count because it tracks gallery storage capacity.
     usage = {
-      "offers"      => object.offers.active.count,
-      "job_posts"   => object.jobs.count,
-      "local_feed"  => object.global_feeds.where(feed_type: "local").count,
-      "global_feed" => object.global_feeds.where(feed_type: "global").count,
+      "offers"         => object.subscription_usage_count("offers"),
+      "job_posts"      => object.subscription_usage_count("job_posts"),
+      "local_feed"     => object.subscription_usage_count("local_feed"),
+      "global_feed"    => object.subscription_usage_count("global_feed"),
+      "domain_uploads" => object.business&.shop_images&.count || 0,
     }
 
     {
-      id:           plan.id,
-      type:         plan.plan_type,
-      features:     features,
-      limits:       limits,
-      ranges:       ranges,
-      amounts:      plan.amounts,
-      subscribed_at: object.subscribed_at,
-      expires_at:   object.subscription_expires_at,
-      is_expired:   object.subscription_expires_at.present? && object.subscription_expires_at < Time.current,
-      usage:        usage
+      id:             plan.id,
+      type:           plan.plan_type,
+      features:       features,
+      limits:         limits,
+      ranges:         ranges,
+      disappear_days: disappear_days,
+      amounts:        plan.amounts,
+      subscribed_at:  object.subscribed_at,
+      expires_at:     object.subscription_expires_at,
+      is_expired:     object.subscription_expires_at.present? && object.subscription_expires_at < Time.current,
+      usage:          usage
     }
   end
 end

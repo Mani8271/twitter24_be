@@ -32,6 +32,39 @@ has_one :live_location, dependent: :destroy
  belongs_to :subscription_plan, optional: true
  has_many :payments, dependent: :nullify
 
+ # ── Subscription usage tracking ───────────────────────────────────────────
+ # Tracks cumulative posts created per feature key within the current
+ # subscription cycle. Counts never decrease on delete/expire — they reset
+ # only when the user subscribes to a (new) plan via reset_subscription_usage!
+ USAGE_FEATURE_KEYS = %w[offers job_posts local_feed global_feed].freeze
+
+ # Returns how many posts this user has created for a feature in this cycle.
+ def subscription_usage_count(feature_key)
+   (subscription_usage || {})[feature_key.to_s].to_i
+ end
+
+ # Atomically increments the cumulative counter for a feature.
+ # Uses a raw SQL JSONB update so concurrent requests don't clobber each other.
+ def increment_subscription_usage!(feature_key)
+   key = feature_key.to_s
+   raise ArgumentError, "Invalid usage key: #{key}" unless key.in?(USAGE_FEATURE_KEYS)
+
+   User.where(id: id).update_all(
+     "subscription_usage = jsonb_set(" \
+     "  COALESCE(subscription_usage, '{}')," \
+     "  '{#{key}}'," \
+     "  to_jsonb(COALESCE((subscription_usage->>'#{key}')::int, 0) + 1)" \
+     ")"
+   )
+   reload
+ end
+
+ # Resets all usage counters to zero.
+ # Call this when a user subscribes to a new plan (fresh cycle).
+ def reset_subscription_usage!
+   update_column(:subscription_usage, {})
+ end
+
  # ── Subscription snapshot helpers ─────────────────────────────────────────
  # Limits, ranges, and features are snapshotted at subscription time so that
  # admin edits to the plan never retroactively affect existing subscribers.
@@ -71,6 +104,16 @@ has_one :live_location, dependent: :destroy
      val.present? ? val.to_i : nil
    else
      subscription_plan&.range_for(key)
+   end
+ end
+
+ def effective_disappear_days(feature_key)
+   key = feature_key.to_s
+   if subscribed_at.present? && subscribed_disappear_days&.key?(key)
+     val = subscribed_disappear_days[key]
+     val.present? ? val.to_i : nil   # nil = no limit
+   else
+     subscription_plan&.disappear_days_for(key)
    end
  end
 

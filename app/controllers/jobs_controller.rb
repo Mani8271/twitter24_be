@@ -15,6 +15,9 @@ class JobsController < ApplicationController
   # ?salary_max=          → maximum salary
   # ?sort=newest|oldest|salary_asc|salary_desc
   def index
+    per_page = 20
+    page     = [params[:page].to_i, 1].max
+
     jobs = Job.all
 
     jobs = jobs.where(user_id: current_user.id) if params[:my] == "true"
@@ -42,7 +45,19 @@ class JobsController < ApplicationController
     jobs = jobs.by_salary_max(params[:salary_max])
     jobs = jobs.sorted_by(params[:sort])
 
-    render json: jobs, each_serializer: JobSerializer, scope: current_user
+    total = jobs.count
+    jobs  = jobs.offset((page - 1) * per_page).limit(per_page)
+
+    render json: {
+      jobs: ActiveModelSerializers::SerializableResource.new(jobs, each_serializer: JobSerializer, scope: current_user).as_json,
+      meta: {
+        page:       page,
+        per_page:   per_page,
+        total:      total,
+        has_more:   (page * per_page) < total,
+        request_id: params[:request_id].presence
+      }
+    }
   end
 
   # GET /jobs/:id
@@ -54,11 +69,12 @@ class JobsController < ApplicationController
   def create
     return unless require_business!
     return unless require_feature!("job_posts")
-    return unless check_limit!("job_posts", current_user.jobs.active.count)
+    return unless check_limit!("job_posts")
 
     job = current_user.jobs.build(job_params)
 
     if job.save
+      current_user.increment_subscription_usage!("job_posts")
       render json: job, serializer: JobSerializer, scope: current_user, status: :created
     else
       render json: { errors: job.errors.full_messages }, status: :unprocessable_entity

@@ -20,12 +20,37 @@ module Api
           subscribed_ranges:            plan.ranges,
           subscribed_disappear_days:    plan.disappear_days,
           subscribed_at:                Time.current,
-          subscription_expires_at:      Time.current + 30.days
+          subscription_expires_at:      Time.current + 30.days,
+          # ── Reset usage counters for the new subscription cycle ──────────
+          subscription_usage:           {}
         )
           render json: current_user, serializer: UserSerializer, status: :ok
         else
           render json: { errors: current_user.errors.full_messages },
                  status: :unprocessable_entity
+        end
+      end
+
+      # DELETE /api/v1/subscriptions/cancel
+      def cancel
+        unless current_user.subscription_plan_id.present? && current_user.is_subscription_completed
+          return render json: { error: "No active subscription to cancel." }, status: :unprocessable_entity
+        end
+
+        if current_user.update(
+          subscription_plan_id:      nil,
+          is_subscription_completed: false,
+          subscribed_features:       nil,
+          subscribed_limits:         nil,
+          subscribed_ranges:         nil,
+          subscribed_disappear_days: nil,
+          subscribed_at:             nil,
+          subscription_expires_at:   nil,
+          subscription_usage:        {}
+        )
+          render json: current_user, serializer: UserSerializer, status: :ok
+        else
+          render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
         end
       end
 

@@ -67,8 +67,9 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
 
   namespace :api do
     namespace :v1 do
-      get  "subscriptions/plans",     to: "subscriptions#plans"
-      post "subscriptions/subscribe", to: "subscriptions#subscribe"
+      get    "subscriptions/plans",     to: "subscriptions#plans"
+      post   "subscriptions/subscribe", to: "subscriptions#subscribe"
+      delete "subscriptions/cancel",    to: "subscriptions#cancel"
 
       get  "payments/history",            to: "payments#history"
       post "payments/initiate",          to: "payments#initiate"

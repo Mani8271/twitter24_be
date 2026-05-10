@@ -1,4 +1,5 @@
 class OnboardingController < ApplicationController
+  include PlanAuthorized
 
   # Helpers
   def business
@@ -114,8 +115,27 @@ class OnboardingController < ApplicationController
       business.profile_picture.attach(params[:profile_picture])
     end
 
-    # gallery images optional
+    # gallery images — enforce plan feature + limit before attaching
     if params[:shop_images].present?
+      return unless require_feature!("domain_uploads")
+
+      limit = current_user.feature_limit("domain_uploads")
+      if limit
+        new_count     = Array.wrap(params[:shop_images]).length
+        current_count = business.shop_images.count
+        if current_count + new_count > limit
+          return render json: {
+            error:            "Uploading #{new_count} image(s) would exceed your plan limit of #{limit}. " \
+                              "You currently have #{current_count} image(s).",
+            feature_key:      "domain_uploads",
+            limit_reached:    true,
+            limit:            limit,
+            current_count:    current_count,
+            upgrade_required: true
+          }, status: :forbidden
+        end
+      end
+
       business.shop_images.attach(params[:shop_images])
     end
 

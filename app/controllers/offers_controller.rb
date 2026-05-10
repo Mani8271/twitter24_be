@@ -42,10 +42,11 @@ class OffersController < ApplicationController
       render json: {
         offers:  offers,
         meta: {
-          page:     page,
-          per_page: per_page,
-          total:    total,
-          has_more: (page * per_page) < total
+          page:       page,
+          per_page:   per_page,
+          total:      total,
+          has_more:   (page * per_page) < total,
+          request_id: params[:request_id].presence
         }
       }
     end
@@ -59,11 +60,12 @@ class OffersController < ApplicationController
     def create
       return unless require_business!
       return unless require_feature!("offers")
-      return unless check_limit!("offers", current_user.offers.active.count)
+      return unless check_limit!("offers")
 
       offer = current_user.offers.build(offer_params)
 
       if offer.save
+        current_user.increment_subscription_usage!("offers")
         render json: offer, status: :created
       else
         render json: { errors: offer.errors.full_messages }, status: :unprocessable_entity

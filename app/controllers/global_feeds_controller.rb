@@ -236,7 +236,8 @@ class GlobalFeedsController < ApplicationController
       feeds = feeds.offset((page - 1) * per_page).limit(per_page)
       return render json: {
         feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
-        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total }
+        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total,
+                    request_id: params[:request_id].presence }
       }
     end
 
@@ -255,7 +256,8 @@ class GlobalFeedsController < ApplicationController
       feeds = feeds.offset((page - 1) * per_page).limit(per_page)
       return render json: {
         feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
-        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total }
+        meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total,
+                    request_id: params[:request_id].presence }
       }
     end
 
@@ -362,10 +364,11 @@ class GlobalFeedsController < ApplicationController
                   scope: current_user
                 ).as_json,
       meta: {
-        page:     page,
-        per_page: per_page,
-        total:    total,
-        has_more: (page * per_page) < total
+        page:       page,
+        per_page:   per_page,
+        total:      total,
+        has_more:   (page * per_page) < total,
+        request_id: params[:request_id].presence
       }
     }
   end
@@ -403,12 +406,14 @@ class GlobalFeedsController < ApplicationController
     create_both     = params[:create_both].to_s == "true" && requested_type == "local"
 
     return unless require_feature!(feature_key)
-    return unless check_limit!(feature_key, current_user.global_feeds.where(feed_type: requested_type).count)
+    return unless check_limit!(feature_key)
+    return unless check_disappear_days!(feature_key, feed_params[:disappear_after])
 
     # If create_both is requested, also check the global_feed limit separately
     if create_both
       return unless require_feature!("global_feed")
-      return unless check_limit!("global_feed", current_user.global_feeds.where(feed_type: "global").count)
+      return unless check_limit!("global_feed")
+      return unless check_disappear_days!("global_feed", feed_params[:disappear_after])
     end
 
     ActiveRecord::Base.transaction do
@@ -418,6 +423,7 @@ class GlobalFeedsController < ApplicationController
       main_feed = build_feed(feed_params[:feed_type])
       main_feed.save!
       attach_media(main_feed)
+      current_user.increment_subscription_usage!(feature_key)
 
       created_feeds << main_feed
 
@@ -426,10 +432,11 @@ class GlobalFeedsController < ApplicationController
         global_feed = build_feed("global")
         global_feed.save!
         attach_media(global_feed)
+        current_user.increment_subscription_usage!("global_feed")
 
         created_feeds << global_feed
       end
-  
+
       render json: created_feeds,
              each_serializer: GlobalFeedSerializer,
              scope: current_user,
