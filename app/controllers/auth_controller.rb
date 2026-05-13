@@ -80,7 +80,10 @@ class AuthController < ApplicationController
     end
 
     unless user.is_active
-      return render json: { error: "account_inactive" }, status: :forbidden
+      return render json: {
+        error: "account_inactive",
+        message: "Your account has been deactivated. Please contact the administrator for assistance."
+      }, status: :forbidden
     end
 
     unless user.phone_verified

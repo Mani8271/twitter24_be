@@ -42,7 +42,10 @@ class ApplicationController < ActionController::Base
     @current_user = User.find(decoded[:user_id])
 
     unless @current_user.is_active
-      render json: { error: "account_inactive" }, status: :forbidden
+      render json: {
+        error: "account_inactive",
+        message: "Your account has been deactivated. Please contact the administrator for assistance."
+      }, status: :forbidden
     end
   rescue ActiveRecord::RecordNotFound => e
     render json: { errors: e.message }, status: :unauthorized
