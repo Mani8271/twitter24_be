@@ -13,7 +13,12 @@ class User < ApplicationRecord
   end
   has_many :live_locations, dependent: :destroy
   validates :name, presence: true
-  validates :phone_number, presence: true, uniqueness: { case_sensitive: false }
+  PHONE_REGEX = /\A[6-9]\d{9}\z/
+  validates :phone_number,
+    presence: { message: "Mobile number is required" },
+    uniqueness: { case_sensitive: false, message: "Mobile number is already registered" },
+    length: { is: 10, message: "Mobile number must be exactly 10 digits" },
+    format: { with: PHONE_REGEX, message: "Mobile number must be a valid 10-digit Indian number starting with 6-9" }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validates :account_type, inclusion: { in: %w[user business] }
 
@@ -31,6 +36,7 @@ has_one :live_location, dependent: :destroy
  has_many :jobs, dependent: :destroy
  belongs_to :subscription_plan, optional: true
  has_many :payments, dependent: :nullify
+ has_many :business_upgrade_requests, dependent: :destroy
 
  # ── Subscription usage tracking ───────────────────────────────────────────
  # Tracks cumulative posts created per feature key within the current
@@ -137,6 +143,10 @@ has_one :live_location, dependent: :destroy
     otp
   end
    def business_required_for_business_account
+    # Skip during the upgrade flow — the admin creates the business record
+    # immediately after changing account_type, so the momentary gap is fine.
+    return if account_type_changed? && account_type == "business"
+
     if account_type == "business" && business.nil?
       errors.add(:business, "must exist for business accounts")
     end

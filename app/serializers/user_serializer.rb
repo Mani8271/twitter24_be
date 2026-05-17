@@ -17,7 +17,8 @@ class UserSerializer < ActiveModel::Serializer
              :followed_businesses_count,
              :subscription_plan,
              :billing_address,
-             :feature_blocks
+             :feature_blocks,
+             :upgrade_request_status
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
@@ -83,6 +84,17 @@ class UserSerializer < ActiveModel::Serializer
     loc = object.business&.business_location
     return nil unless loc
     [loc.address_line1, loc.address_line2, loc.city, loc.state].compact.reject(&:blank?).join(", ")
+  end
+
+  # ─── Business Upgrade Request Status ──────────────────────────────────
+  # Returns the most recent request status for regular users so the frontend
+  # can show: nil (no request), "pending", "approved", or "rejected".
+  # Returns nil for business accounts — they no longer need to upgrade.
+  def upgrade_request_status
+    return nil if object.account_type == "business"
+
+    req = object.business_upgrade_requests.order(created_at: :desc).first
+    req&.request_status
   end
 
   # ─── Feature Blocks ────────────────────────────────────────────────────

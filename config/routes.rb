@@ -43,6 +43,10 @@ Rails.application.routes.draw do
   end
 
 
+  # Business upgrade requests (user-facing)
+  post "/business_upgrade_requests",        to: "business_upgrade_requests#create"
+  get  "/business_upgrade_requests/status", to: "business_upgrade_requests#status"
+
   post "/live_location", to: "live_locations#upsert"
 get  "/live_location/me", to: "live_locations#me"
 get  "/live_location/reach_counts", to: "live_locations#reach_counts"

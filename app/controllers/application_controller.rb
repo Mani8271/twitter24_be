@@ -41,6 +41,17 @@ class ApplicationController < ActionController::Base
     decoded = JsonWebToken.decode(token)
     @current_user = User.find(decoded[:user_id])
 
+    # Token version check: invalidates sessions after role changes (e.g. business upgrade).
+    # Tokens issued before token_version was introduced carry no :token_version key,
+    # which decodes as nil → .to_i == 0, matching the column default of 0.
+    # Only after an admin increments token_version (e.g. to 1) do old tokens fail.
+    if decoded[:token_version].to_i != @current_user.token_version
+      return render json: {
+        errors: "Session expired. Please log in again.",
+        session_expired: true
+      }, status: :unauthorized
+    end
+
     unless @current_user.is_active
       render json: {
         error: "account_inactive",

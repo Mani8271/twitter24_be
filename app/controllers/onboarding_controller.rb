@@ -115,24 +115,28 @@ class OnboardingController < ApplicationController
       business.profile_picture.attach(params[:profile_picture])
     end
 
-    # gallery images — enforce plan feature + limit before attaching
+    # gallery images
+    # Subscription plan limits apply only when managing an already-completed domain (My Domain page).
+    # During initial onboarding the user has no subscription yet, so checks are skipped.
     if params[:shop_images].present?
-      return unless require_feature!("domain_uploads")
+      if progress.completed
+        return unless require_feature!("domain_uploads")
 
-      limit = current_user.feature_limit("domain_uploads")
-      if limit
-        new_count     = Array.wrap(params[:shop_images]).length
-        current_count = business.shop_images.count
-        if current_count + new_count > limit
-          return render json: {
-            error:            "Uploading #{new_count} image(s) would exceed your plan limit of #{limit}. " \
-                              "You currently have #{current_count} image(s).",
-            feature_key:      "domain_uploads",
-            limit_reached:    true,
-            limit:            limit,
-            current_count:    current_count,
-            upgrade_required: true
-          }, status: :forbidden
+        limit = current_user.feature_limit("domain_uploads")
+        if limit
+          new_count     = Array.wrap(params[:shop_images]).length
+          current_count = business.shop_images.count
+          if current_count + new_count > limit
+            return render json: {
+              error:            "Uploading #{new_count} image(s) would exceed your plan limit of #{limit}. " \
+                                "You currently have #{current_count} image(s).",
+              feature_key:      "domain_uploads",
+              limit_reached:    true,
+              limit:            limit,
+              current_count:    current_count,
+              upgrade_required: true
+            }, status: :forbidden
+          end
         end
       end
 
@@ -187,8 +191,8 @@ class OnboardingController < ApplicationController
                         .order(created_at: :desc)
                         .first
 
-    return render(json: { error: "Invalid OTP" }, status: :unauthorized) unless otp_record&.otp_number == otp_input
-    return render(json: { error: "OTP expired. Please request a new one." }, status: :unauthorized) if otp_record.otp_expiry < Time.current
+    return render(json: { error: "Invalid OTP. Please try again." }, status: :unprocessable_entity) unless otp_record&.otp_number == otp_input
+    return render(json: { error: "OTP expired. Please request a new one." }, status: :unprocessable_entity) if otp_record.otp_expiry < Time.current
 
     otp_record.destroy
     render json: { message: "Phone number verified successfully" }, status: :ok

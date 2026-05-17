@@ -271,6 +271,16 @@ class GlobalFeedsController < ApplicationController
       feeds = feeds.where(feed_type: params[:type])
     end
 
+    # Local feeds require a location — without lat/lng there is no meaningful
+    # distance check, so return empty rather than dumping all local posts.
+    if params[:type] == "local" && (params[:lat].blank? || params[:lng].blank?)
+      return render json: {
+        feeds: [],
+        meta: { page: page, per_page: per_page, total: 0, has_more: false,
+                request_id: params[:request_id].presence, location_required: true }
+      }
+    end
+
     # 3) SEARCH filter
     if params[:q].present?
       like = "%#{params[:q].downcase}%"

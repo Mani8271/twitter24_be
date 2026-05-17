@@ -22,6 +22,10 @@ class AuthController < ApplicationController
     phone_number = params[:phone_number]
     return render(json: { error: "phone_number is required" }, status: :bad_request) if phone_number.blank?
 
+    unless phone_number.match?(/\A[6-9]\d{9}\z/)
+      return render json: { error: "Mobile number must be exactly 10 digits and start with 6, 7, 8, or 9." }, status: :unprocessable_entity
+    end
+
     user = User.find_by(phone_number: phone_number)
     return render(json: { error: "User not found. Please sign up first." }, status: :not_found) unless user
 
@@ -69,14 +73,22 @@ class AuthController < ApplicationController
       return render json: { error: "Phone Number and Password are required" }, status: :bad_request
     end
 
+    unless phone_number.match?(/\A[6-9]\d{9}\z/)
+      return render json: { error: "Mobile number must be exactly 10 digits and start with 6, 7, 8, or 9." }, status: :unprocessable_entity
+    end
+
     user = User.find_by(phone_number: phone_number)
 
-    unless user&.authenticate(password)
-      return render json: { error: "Invalid Phone Number or Password" }, status: :unauthorized
+    unless user
+      return render json: { error: "This phone number is not registered. Please sign up first." }, status: :not_found
+    end
+
+    unless user.authenticate(password)
+      return render json: { error: "Incorrect password. Please try again." }, status: :unauthorized
     end
 
     if user.deleted?
-      return render json: { error: "This account has been deleted." }, status: :forbidden
+      return render json: { error: "This account has been deleted. Please contact support." }, status: :forbidden
     end
 
     unless user.is_active
@@ -93,10 +105,8 @@ class AuthController < ApplicationController
       }, status: :forbidden
     end
 
-    token = JsonWebToken.encode({ user_id: user.id })
+    token = JsonWebToken.encode({ user_id: user.id, token_version: user.token_version })
     exp = 1.year.from_now.strftime("%m-%d-%Y %H:%M")
-
-    
 
     render json: {
       message: "Login successful",
@@ -122,7 +132,7 @@ class AuthController < ApplicationController
         return render json: { error: "OTP expired" }, status: :unauthorized
       end
         user.update(phone_verified: true)
-      token = JsonWebToken.encode({ user_id: user.id })
+      token = JsonWebToken.encode({ user_id: user.id, token_version: user.token_version })
       exp_formatted = (Time.now + 365.days).strftime("%m-%d-%Y %H:%M")
 
       render json: {

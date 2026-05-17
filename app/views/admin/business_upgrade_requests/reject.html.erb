@@ -1,0 +1,31 @@
+<% content_for :title, "Reject Upgrade Request" %>
+
+<div class="admin_upgrade_reject" style="max-width: 600px; margin: 32px auto;">
+  <h2 style="margin-bottom: 16px;">Reject Business Upgrade Request</h2>
+
+  <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+    <strong>User:</strong> <%= @business_upgrade_request.user.name %>
+    (<%= @business_upgrade_request.user.phone_number %>)<br>
+    <strong>Requested At:</strong> <%= @business_upgrade_request.requested_at.strftime("%d %b %Y %H:%M") %>
+  </div>
+
+  <%= form_tag do_reject_admin_business_upgrade_request_path(@business_upgrade_request), method: :post do %>
+    <div style="margin-bottom: 16px;">
+      <label for="rejection_reason" style="display: block; font-weight: bold; margin-bottom: 6px;">
+        Rejection Reason <span style="color: #666; font-weight: normal;">(shown to the user)</span>
+      </label>
+      <%= text_area_tag :rejection_reason, nil,
+            rows: 5,
+            placeholder: "Explain why this request is being rejected...",
+            style: "width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;" %>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <%= submit_tag "Confirm Rejection",
+            style: "background: #c62828; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px;",
+            data: { confirm: "Are you sure you want to reject this request?" } %>
+      <%= link_to "Cancel", admin_business_upgrade_request_path(@business_upgrade_request),
+            style: "background: #e0e0e0; color: #333; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 14px;" %>
+    </div>
+  <% end %>
+</div>
