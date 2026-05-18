@@ -224,6 +224,17 @@ class GlobalFeedsController < ApplicationController
   before_action :authorize_request
   before_action :set_global_feed, only: [:show, :update, :destroy]
 
+  FEED_INCLUDES = [
+    :likes,
+    :comments,
+    :views,
+    { user: [
+        { profile_picture_attachment: :blob },
+        { business: { profile_picture_attachment: :blob } }
+    ] },
+    { media_attachments: :blob }
+  ].freeze
+
   def index
     per_page = 10
     page     = [params[:page].to_i, 1].max
@@ -233,7 +244,7 @@ class GlobalFeedsController < ApplicationController
       feeds = GlobalFeed.where(user_id: params[:user_id]).order(created_at: :desc)
       feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
       total = feeds.count
-      feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+      feeds = feeds.offset((page - 1) * per_page).limit(per_page).includes(FEED_INCLUDES)
       return render json: {
         feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
         meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total,
@@ -253,7 +264,7 @@ class GlobalFeedsController < ApplicationController
         )
       end
       total = feeds.count
-      feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+      feeds = feeds.offset((page - 1) * per_page).limit(per_page).includes(FEED_INCLUDES)
       return render json: {
         feeds:    ActiveModelSerializers::SerializableResource.new(feeds, each_serializer: GlobalFeedSerializer, scope: current_user).as_json,
         meta:     { page: page, per_page: per_page, total: total, has_more: (page * per_page) < total,
@@ -365,7 +376,7 @@ class GlobalFeedsController < ApplicationController
     end
 
     total = feeds.count
-    feeds = feeds.offset((page - 1) * per_page).limit(per_page)
+    feeds = feeds.offset((page - 1) * per_page).limit(per_page).includes(FEED_INCLUDES)
 
     render json: {
       feeds:    ActiveModelSerializers::SerializableResource.new(
@@ -491,7 +502,7 @@ class GlobalFeedsController < ApplicationController
   private
 
   def set_global_feed
-    @global_feed = GlobalFeed.find(params[:id])
+    @global_feed = GlobalFeed.includes(FEED_INCLUDES).find(params[:id])
   end
 
   def feed_params

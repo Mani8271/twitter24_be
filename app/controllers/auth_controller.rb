@@ -1,5 +1,7 @@
 class AuthController < ApplicationController
-   skip_before_action :authorize_request
+  # reset_password is intentionally excluded — it requires the JWT issued by
+  # verify_otp so the server can confirm the caller owns the account being changed.
+  skip_before_action :authorize_request, only: [:signup, :signin, :send_otp, :verify_otp]
 
   # POST /signup
   def signup
@@ -147,26 +149,24 @@ class AuthController < ApplicationController
   end
 
   # POST /reset_password
+  # Requires the JWT issued by verify_otp in the Authorization header.
+  # Identity is taken from current_user — the phone_number param is ignored.
   def reset_password
-    phone_number = params[:phone_number]
-    password = params[:password]
+    password              = params[:password]
     password_confirmation = params[:password_confirmation]
 
-    if phone_number.blank? || password.blank? || password_confirmation.blank?
-      return render json: { error: "phone_number, password, password_confirmation are required" }, status: :bad_request
+    if password.blank? || password_confirmation.blank?
+      return render json: { error: "password and password_confirmation are required" }, status: :bad_request
     end
-
-    user = User.find_by(phone_number: phone_number)
-    return render json: { error: "User not found" }, status: :not_found unless user
 
     unless password == password_confirmation
-      return render json: { error: "Password and password confirmation do not match" }, status: :unprocessable_content
+      return render json: { error: "Password and password confirmation do not match" }, status: :unprocessable_entity
     end
 
-    if user.update(password: password, password_confirmation: password_confirmation)
+    if current_user.update(password: password, password_confirmation: password_confirmation)
       render json: { message: "Password reset successful. Please login." }, status: :ok
     else
-      render json: { error: user.errors.full_messages }, status: :unprocessable_content
+      render json: { error: current_user.errors.full_messages }, status: :unprocessable_entity
     end
   end
 

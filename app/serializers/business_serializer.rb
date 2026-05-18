@@ -40,26 +40,40 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def jobs_count
-    object.user.jobs.count
+    object.user.jobs.size
   end
 
   def reviews_count
     object.reviews_count || 0
   end
 
- def followers_count
-  object.followers_count
-end
+  def followers_count
+    object.follows.size
+  end
 
-def followed_by_me
-  scope && object.followed_by?(scope)
-end
+  def followed_by_me
+    return false unless scope
+    if object.association(:follows).loaded?
+      object.follows.any? { |f| f.user_id == scope.id }
+    else
+      object.follows.exists?(user_id: scope.id)
+    end
+  end
+
   def global_feeds_count
-    object.global_feeds.where(feed_type: "global").count
+    if object.association(:global_feeds).loaded?
+      object.global_feeds.count { |f| f.feed_type == "global" }
+    else
+      object.global_feeds.where(feed_type: "global").count
+    end
   end
 
   def local_feeds_count
-    object.global_feeds.where(feed_type: "local").count
+    if object.association(:global_feeds).loaded?
+      object.global_feeds.count { |f| f.feed_type == "local" }
+    else
+      object.global_feeds.where(feed_type: "local").count
+    end
   end
 
   # =================================
@@ -118,9 +132,19 @@ end
     loc = object.business_location
     return 0 unless loc&.latitude && loc&.longitude
 
+    # Use detect (in-memory) when live_locations is preloaded; find_by otherwise.
+    # Controllers should call current_user.live_locations.load before serializing
+    # a list so this fires at most one query per request, not one per business.
+    user_loc = if scope.live_locations.loaded?
+                 scope.live_locations.detect(&:live_location_default)
+               else
+                 scope.live_locations.find_by(live_location_default: true)
+               end
+
+    return 0 unless user_loc&.latitude && user_loc&.longitude
+
     Geocoder::Calculations.distance_between(
-      [scope.live_locations.find_by(live_location_default: true)&.latitude, 
-       scope.live_locations.find_by(live_location_default: true)&.longitude],
+      [user_loc.latitude, user_loc.longitude],
       [loc.latitude, loc.longitude]
     ).round(2)
   end
@@ -142,11 +166,16 @@ end
   
   
 
-   def favorites_count
-    object.favorites_count
+  def favorites_count
+    object.likes.size
   end
 
   def favorited_by_me
-    scope && object.favorited_by?(scope)
+    return false unless scope
+    if object.association(:likes).loaded?
+      object.likes.any? { |l| l.user_id == scope.id }
+    else
+      object.likes.exists?(user_id: scope.id)
+    end
   end
 end

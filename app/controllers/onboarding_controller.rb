@@ -4,6 +4,10 @@ class OnboardingController < ApplicationController
   # Helpers
   def business
     @business ||= current_user.business || current_user.create_business!(status: "draft", products_services: [])
+    # Invariant: @business always belongs to current_user because it is fetched/created
+    # through the current_user association. Raise loudly if this assumption is ever violated.
+    raise "Ownership invariant violated" unless @business.user_id == current_user.id
+    @business
   end
 
   def progress

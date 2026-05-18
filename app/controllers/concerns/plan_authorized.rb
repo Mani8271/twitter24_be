@@ -1,9 +1,28 @@
 module PlanAuthorized
   extend ActiveSupport::Concern
 
+  # Halts with 403 if the user's subscription has expired.
+  # A nil expires_at means the user is on a free plan or has no subscription — in
+  # that case require_feature! will gate them correctly via has_feature?. We only
+  # block when there IS a recorded expiry and it has already passed.
+  # Returns true when active; false (already rendered) when expired.
+  def require_active_subscription!
+    expires_at = current_user.subscription_expires_at
+    return true if expires_at.nil? || expires_at >= Time.current
+
+    render json: {
+      error:                "Your subscription has expired. Please renew to continue using this feature.",
+      subscription_expired: true,
+      expired_at:           expires_at.iso8601
+    }, status: :forbidden
+    false
+  end
+
   # Halts with 403 if the current user's plan doesn't include the feature.
+  # Also blocks expired subscriptions before the feature check (checked first).
   # Returns true on success so you can chain: return unless require_feature!("offers")
   def require_feature!(feature_key)
+    return false unless require_active_subscription!
     return true if current_user.has_feature?(feature_key)
 
     plan = current_user.subscription_plan

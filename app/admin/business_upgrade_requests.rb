@@ -16,6 +16,8 @@ ActiveAdmin.register BusinessUpgradeRequest do
   filter :requested_at
   filter :approved_by
   filter :approved_at
+  filter :rejected_by
+  filter :rejected_at
   filter :created_at
 
   # ─── Index ───────────────────────────────────────────────────────────────
@@ -37,8 +39,18 @@ ActiveAdmin.register BusinessUpgradeRequest do
       span req.request_status.capitalize, style: "color: #{color}; font-weight: bold;"
     end
     column :requested_at
-    column :approved_by
-    column :approved_at
+    column "Reviewed By" do |req|
+      case req.request_status
+      when "approved" then req.approved_by
+      when "rejected" then req.rejected_by
+      end
+    end
+    column "Reviewed At" do |req|
+      case req.request_status
+      when "approved" then req.approved_at
+      when "rejected" then req.rejected_at
+      end
+    end
     actions defaults: false do |req|
       item "View", admin_business_upgrade_request_path(req), class: "member_link"
       if req.request_status == "pending"
@@ -61,9 +73,22 @@ ActiveAdmin.register BusinessUpgradeRequest do
           span resource.request_status.capitalize, style: "color: #{color}; font-weight: bold;"
         end
         row :requested_at
-        row :approved_by
-        row :approved_at
-        row :rejection_reason
+
+        if resource.request_status == "approved"
+          row :approved_by
+          row :approved_at
+        end
+
+        if resource.request_status == "rejected"
+          row :rejected_by
+          row :rejected_at
+          row :rejection_reason do
+            div style: "background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px;" do
+              resource.rejection_reason
+            end
+          end
+        end
+
         row :created_at
         row :updated_at
       end
@@ -111,21 +136,17 @@ ActiveAdmin.register BusinessUpgradeRequest do
     ActiveRecord::Base.transaction do
       user = req.user
 
-      # 1. Upgrade account type and rotate token version to invalidate existing sessions.
       user.update_columns(
         account_type:  "business",
         token_version: user.token_version + 1
       )
 
-      # 2. Reload to pick up the changed account_type for association creation.
       user.reload
 
-      # 3. Create a placeholder business profile if one doesn't exist yet.
       unless user.business
         user.create_business!(status: "draft", products_services: [])
       end
 
-      # 4. Create onboarding progress record to track the 6-step wizard.
       unless user.onboarding_progress
         OnboardingProgress.create!(
           user_id:         user.id,
@@ -135,7 +156,6 @@ ActiveAdmin.register BusinessUpgradeRequest do
         )
       end
 
-      # 5. Mark the upgrade request as approved.
       req.update!(
         request_status: "approved",
         approved_by:    current_admin_user.email,
@@ -151,6 +171,7 @@ ActiveAdmin.register BusinessUpgradeRequest do
 
   # ─── Reject (form) ───────────────────────────────────────────────────────
   member_action :reject, method: :get do
+    @business_upgrade_request = resource
     render :reject
   end
 
@@ -162,16 +183,24 @@ ActiveAdmin.register BusinessUpgradeRequest do
       return
     end
 
-    reason = params[:rejection_reason].presence || "Request rejected by administrator."
+    reason = params[:rejection_reason].presence
+
+    if reason.blank?
+      @business_upgrade_request = req
+      flash.now[:error] = "Rejection reason is required. Please explain why this request is being rejected."
+      render :reject
+      return
+    end
 
     req.update!(
       request_status:   "rejected",
-      approved_by:      current_admin_user.email,
+      rejected_by:      current_admin_user.email,
+      rejected_at:      Time.current,
       rejection_reason: reason
     )
 
     redirect_to admin_business_upgrade_requests_path,
-                notice: "Request rejected. #{resource.user.name} has been notified."
+                notice: "Request rejected. #{req.user.name} has been notified."
   rescue => e
     redirect_to admin_business_upgrade_requests_path, alert: "Rejection failed: #{e.message}"
   end

@@ -8,9 +8,17 @@ class BusinessesController < ApplicationController
   # GET /api/v1/businesses
   # =========================================================
    def index
+  # Preload current_user's live location once so BusinessSerializer#distance_km
+  # can use detect (in-memory) instead of firing a find_by per business.
+  current_user.live_locations.load
+
   businesses = Business
-                .includes(:business_location, :business_hours, :business_contact,
-                          profile_picture_attachment: :blob)
+                .includes(
+                  :business_location, :business_hours, :business_contact,
+                  :follows, :likes, :global_feeds,
+                  { user: :jobs },
+                  profile_picture_attachment: :blob
+                )
                 .where(status: "approved")
                 if params[:mine].to_s.downcase == "true"
                   businesses = businesses.where(user_id: current_user.id)
@@ -44,8 +52,7 @@ class BusinessesController < ApplicationController
 end
 
 def update
-  business = current_user.business
-
+  business = Business.find_by(id: params[:id], user_id: current_user.id)
   return render json: { error: "Business not found" }, status: :not_found unless business
 
   if business.update(business_params)
@@ -102,10 +109,14 @@ end
   # GET /api/v1/businesses/:id
   # =========================================================
   def show
+    current_user.live_locations.load
+
     business = Business.includes(
                   :business_location,
                   :business_contact,
                   :business_hours,
+                  :follows, :likes, :global_feeds,
+                  { user: :jobs },
                   shop_images_attachments: :blob,
                   profile_picture_attachment: :blob
                 ).find(params[:id])

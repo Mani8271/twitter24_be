@@ -28,19 +28,24 @@ class GlobalFeedSerializer < ActiveModel::Serializer
   # COUNTS
   # =========================
   def likes_count
-    object.likes.count
+    object.likes.size
   end
 
   def comments_count
-    object.comments.count
+    object.comments.size
   end
 
   def views_count
-    object.views.count
+    object.views.size
   end
 
   def liked_by_me
-    scope && object.likes.exists?(user_id: scope.id)
+    return false unless scope
+    if object.association(:likes).loaded?
+      object.likes.any? { |l| l.user_id == scope.id }
+    else
+      object.likes.exists?(user_id: scope.id)
+    end
   end
 
   # =========================

@@ -44,6 +44,9 @@ class BusinessUpgradeRequestsController < ApplicationController
       request_status:   req.request_status,
       requested_at:     req.requested_at,
       approved_at:      req.approved_at,
+      approved_by:      req.approved_by,
+      rejected_at:      req.rejected_at,
+      rejected_by:      req.rejected_by,
       rejection_reason: req.rejection_reason
     }
   end

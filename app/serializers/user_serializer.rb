@@ -87,14 +87,22 @@ class UserSerializer < ActiveModel::Serializer
   end
 
   # ─── Business Upgrade Request Status ──────────────────────────────────
-  # Returns the most recent request status for regular users so the frontend
-  # can show: nil (no request), "pending", "approved", or "rejected".
+  # Returns the most recent request details for regular users.
+  # Shape: { status, rejection_reason, rejected_at, rejected_by, requested_at }
   # Returns nil for business accounts — they no longer need to upgrade.
   def upgrade_request_status
     return nil if object.account_type == "business"
 
     req = object.business_upgrade_requests.order(created_at: :desc).first
-    req&.request_status
+    return nil unless req
+
+    {
+      status:           req.request_status,
+      requested_at:     req.requested_at,
+      rejection_reason: req.rejection_reason,
+      rejected_at:      req.rejected_at,
+      rejected_by:      req.rejected_by,
+    }
   end
 
   # ─── Feature Blocks ────────────────────────────────────────────────────
