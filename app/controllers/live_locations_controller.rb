@@ -8,21 +8,19 @@ class LiveLocationsController < ApplicationController
     lng = params[:longitude]
     return render json: { error: "latitude and longitude required" }, status: :bad_request if lat.blank? || lng.blank?
 
-    # ✅ if you currently have has_one :live_location
-    loc = current_user.live_location || current_user.build_live_location
-
-    loc.latitude = lat
-    loc.longitude = lng
-
-    # ✅ default param handling
     want_default = ActiveModel::Type::Boolean.new.cast(params[:live_location_default])
 
-    # If this user has no saved live_location yet, make first one default
-    is_new_record = loc.new_record?
-    loc.live_location_default = true if is_new_record
+    # Prefer the existing default; if none exists, fall back to any or build new
+    loc = current_user.live_locations.find_by(live_location_default: true)
+    loc ||= current_user.live_location  # has_one fallback for existing single records
+    loc ||= current_user.live_locations.build
 
-    # If client explicitly asks default=true, set it true
-    loc.live_location_default = true if want_default
+    loc.latitude  = lat
+    loc.longitude = lng
+
+    # First-ever location is always the default
+    is_new_record = loc.new_record?
+    loc.live_location_default = true if is_new_record || want_default
 
     # ✅ force reverse geocode now
     loc.reverse_geocode

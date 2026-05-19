@@ -5,9 +5,15 @@ class ReachDistanceController < ApplicationController
   def summary
     # 1) Business default live location (origin)
     default_address = @current_user.live_locations.find_by(live_location_default: true)
+    default_address ||= @current_user.live_location  # fallback to has_one if no default flagged
 
     unless default_address&.latitude.present? && default_address&.longitude.present?
-      return render json: { message: "Business default live location not found" }, status: 422
+      return render json: {
+        origin: nil,
+        ranges: [],
+        total_within_max: 0,
+        location_required: true
+      }, status: :ok
     end
 
     origin = [default_address.latitude, default_address.longitude]
