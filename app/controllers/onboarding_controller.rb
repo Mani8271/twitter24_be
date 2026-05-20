@@ -213,9 +213,8 @@ class OnboardingController < ApplicationController
       business_hours: business.business_hours.as_json(except: [:created_at, :updated_at]),
       documents: business.business_document.as_json(except: [:created_at, :updated_at]),
       images: {
-        # Conditionally include profile_picture if attached
-        profile_picture: business.profile_picture.attached? ? business.profile_picture.blob.url : nil,
-        shop_images: business.shop_images.map { |img| img.blob.url }
+        profile_picture: business.profile_picture.attached? ? attachment_url(business.profile_picture) : nil,
+        shop_images: business.shop_images.map { |img| attachment_url(img) }
       }
     ),
     steps_completed: progress.steps_completed,
@@ -256,8 +255,8 @@ end
     business = current_user.business
 
     render json: {
-      profile_picture: business&.profile_picture&.attached? ? business.profile_picture.blob.url : nil,
-      shop_images: business&.shop_images&.map { |img| img.blob.url } || []
+      profile_picture: business&.profile_picture&.attached? ? attachment_url(business.profile_picture) : nil,
+      shop_images: business&.shop_images&.map { |img| attachment_url(img) } || []
     }
   end
 
@@ -265,6 +264,17 @@ end
   
 
   private
+
+  # Uses the request host so the URL matches the origin that clients connect to.
+  # Avoids blob.url which generates expiring S3 presigned URLs.
+  def attachment_url(attachment)
+    return nil unless attachment&.attached?
+    blob = attachment.blob
+    "#{request.base_url}/rails/active_storage/blobs/redirect/#{blob.signed_id}/#{blob.filename}"
+  rescue StandardError
+    nil
+  end
+
    def create_onboarding_progress_for_business
     OnboardingProgress.create!(
       user_id: current_user.id,

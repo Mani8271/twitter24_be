@@ -508,7 +508,7 @@ class GlobalFeedsController < ApplicationController
   def feed_params
     params.permit(
       :title, :description, :category, :disappear_after, :feed_type,
-      :latitude, :longitude, :address, :reach_distance,
+      :latitude, :longitude, :address,
       tags: [], media: [], links: [:name, :url]
     )
   end
@@ -517,10 +517,11 @@ class GlobalFeedsController < ApplicationController
     feed = GlobalFeed.new(feed_params.except(:media))
     feed.user = current_user
     feed.feed_type = type
-  
+    feed.reach_distance = current_user.effective_range("local_feed") || 10 if type == "local"
+
     normalize_tags(feed)
     normalize_links(feed)
-  
+
     feed
   end
   

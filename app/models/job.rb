@@ -3,6 +3,7 @@ class Job < ApplicationRecord
   has_many_attached :images
 
   validates :job_title, :description, presence: true
+  validates :job_title, length: { maximum: 100 }
   validates :job_type, inclusion: { in: %w[full_time part_time contract internship freelance] }, allow_blank: true
 
   validate :validate_links_format

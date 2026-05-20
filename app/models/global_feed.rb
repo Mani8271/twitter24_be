@@ -7,6 +7,7 @@ class GlobalFeed < ApplicationRecord
   has_many :views, as: :viewable, dependent: :destroy
 
   validates :title, presence: true
+  validates :title, length: { maximum: 100 }
   validates :category, presence: true
 
   validates :feed_type, inclusion: { in: %w[global local] }

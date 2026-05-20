@@ -63,6 +63,7 @@ class OffersController < ApplicationController
       return unless check_limit!("offers")
 
       offer = current_user.offers.build(offer_params)
+      offer.reach_distance = current_user.effective_range("offers") || 10
 
       if offer.save
         current_user.increment_subscription_usage!("offers")
@@ -107,7 +108,6 @@ class OffersController < ApplicationController
         :latitude,
         :longitude,
         :address,
-        :reach_distance,
         :valid_till,
         :tags,
         :disappearing_days,

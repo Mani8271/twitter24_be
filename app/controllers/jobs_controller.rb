@@ -72,6 +72,7 @@ class JobsController < ApplicationController
     return unless check_limit!("job_posts")
 
     job = current_user.jobs.build(job_params)
+    job.reach_distance = current_user.effective_range("job_posts") || 10
 
     if job.save
       current_user.increment_subscription_usage!("job_posts")
@@ -115,7 +116,6 @@ class JobsController < ApplicationController
       :location_name,
       :latitude,
       :longitude,
-      :reach_distance,
       :job_title,
       :salary,
       :experience,

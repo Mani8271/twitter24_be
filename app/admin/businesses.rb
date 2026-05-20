@@ -208,25 +208,142 @@ ActiveAdmin.register Business do
     end
 
     panel "Images" do
-      div style: "display:flex; flex-wrap:wrap; gap:16px; padding:8px 0;" do
-        if resource.profile_picture.attached?
-          div style: "text-align:center;" do
-            para "Profile Picture", style: "font-weight:700;margin-bottom:6px;font-size:12px;color:#6b7280;text-transform:uppercase;"
-            image_tag url_for(resource.profile_picture),
-                      style: "width:140px;height:140px;object-fit:cover;border-radius:12px;border:2px solid #e2e8f0;display:block;"
+      has_pp   = resource.profile_picture.attached?
+      has_shop = resource.shop_images.attached?
+
+      # ── Summary bar ─────────────────────────────────────────────
+      div style: "display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;" do
+        span style: "font-size:13px;font-weight:700;color:#374151;" do
+          text_node "Image Summary:"
+        end
+        if has_pp
+          span style: "background:#e0e7ff;color:#4338ca;font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;" do
+            text_node "1 Profile Picture"
           end
         end
-        if resource.shop_images.attached?
-          resource.shop_images.each_with_index do |img, i|
-            div style: "text-align:center;" do
-              para "Shop Image #{i + 1}", style: "font-weight:700;margin-bottom:6px;font-size:12px;color:#6b7280;text-transform:uppercase;"
-              image_tag url_for(img),
-                        style: "width:140px;height:140px;object-fit:cover;border-radius:12px;border:2px solid #e2e8f0;display:block;"
+        if has_shop
+          count = resource.shop_images.count
+          span style: "background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;" do
+            text_node "#{count} Gallery #{count == 1 ? 'Image' : 'Images'}"
+          end
+        end
+        unless has_pp || has_shop
+          span style: "color:#9ca3af;font-size:13px;" do
+            text_node "No images uploaded"
+          end
+        end
+      end
+
+      # ── Placeholder when no images ───────────────────────────────
+      unless has_pp || has_shop
+        div style: "display:flex;flex-direction:column;align-items:center;justify-content:center;padding:52px 24px;background:#f8fafc;border-radius:12px;border:2px dashed #cbd5e1;text-align:center;" do
+          div style: "font-size:52px;line-height:1;margin-bottom:14px;" do
+            text_node "🖼️"
+          end
+          div style: "font-size:15px;font-weight:700;color:#475569;margin-bottom:6px;" do
+            text_node "No images uploaded yet"
+          end
+          div style: "font-size:13px;color:#94a3b8;" do
+            text_node "The business owner has not uploaded a profile picture or shop images during onboarding."
+          end
+        end
+      end
+
+      # ── Profile Picture / Business Logo ─────────────────────────
+      if has_pp
+        div style: "margin-bottom:28px;" do
+          div style: "display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;" do
+            div style: "font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:1px;" do
+              text_node "Business Logo / Profile Picture"
+            end
+            span style: "background:#e0e7ff;color:#4338ca;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;" do
+              text_node "1 image"
+            end
+          end
+          div style: "display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;" do
+            # Image thumbnail
+            div style: "flex-shrink:0;border-radius:14px;overflow:hidden;border:3px solid #818cf8;width:180px;background:#f1f5f9;" do
+              link_to image_tag(url_for(resource.profile_picture),
+                                alt: "Profile Picture",
+                                style: "width:180px;height:180px;object-fit:cover;display:block;"),
+                      url_for(resource.profile_picture),
+                      target: "_blank", rel: "noopener noreferrer",
+                      style: "display:block;"
+              div style: "padding:8px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;" do
+                div style: "font-size:10px;color:#94a3b8;word-break:break-all;margin-bottom:2px;" do
+                  text_node resource.profile_picture.blob.filename.to_s
+                end
+                div style: "font-size:10px;color:#94a3b8;" do
+                  text_node number_to_human_size(resource.profile_picture.blob.byte_size)
+                end
+              end
+            end
+            # Metadata
+            div style: "color:#64748b;font-size:13px;padding-top:4px;" do
+              para style: "margin:0 0 8px;" do
+                strong "Content type: "
+                text_node resource.profile_picture.blob.content_type
+              end
+              para style: "margin:0 0 8px;" do
+                strong "Size: "
+                text_node number_to_human_size(resource.profile_picture.blob.byte_size)
+              end
+              para style: "margin:0 0 16px;" do
+                strong "Uploaded: "
+                text_node resource.profile_picture.blob.created_at.strftime("%b %d, %Y at %I:%M %p")
+              end
+              link_to "🔍 View Full Size",
+                      url_for(resource.profile_picture),
+                      target: "_blank", rel: "noopener noreferrer",
+                      style: "display:inline-block;padding:7px 16px;background:#e0e7ff;color:#4338ca;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;"
             end
           end
         end
-        unless resource.profile_picture.attached? || resource.shop_images.attached?
-          para "No images uploaded yet.", style: "color:#9ca3af;"
+      end
+
+      # ── Shop / Gallery Images ────────────────────────────────────
+      if has_shop
+        shop_images = resource.shop_images_attachments.includes(:blob)
+        div do
+          div style: "display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #e2e8f0;" do
+            div style: "font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:1px;" do
+              text_node "Shop / Gallery Images"
+            end
+            count = shop_images.count
+            span style: "background:#dcfce7;color:#15803d;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;" do
+              text_node "#{count} #{count == 1 ? 'image' : 'images'}"
+            end
+          end
+          div style: "display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px;" do
+            shop_images.each_with_index do |img, i|
+              div style: "border-radius:12px;overflow:hidden;border:2px solid #e2e8f0;background:#f8fafc;" do
+                link_to image_tag(url_for(img),
+                                  alt: "Shop Image #{i + 1}",
+                                  style: "width:100%;height:155px;object-fit:cover;display:block;"),
+                        url_for(img),
+                        target: "_blank", rel: "noopener noreferrer",
+                        title: "Click to view #{img.blob.filename} at full size",
+                        style: "display:block;"
+                div style: "padding:8px 10px;background:#f8fafc;border-top:1px solid #e2e8f0;" do
+                  div style: "font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px;" do
+                    text_node "Image #{i + 1}"
+                  end
+                  div style: "font-size:10px;color:#94a3b8;word-break:break-all;margin-bottom:2px;" do
+                    text_node img.blob.filename.to_s
+                  end
+                  div style: "display:flex;align-items:center;justify-content:space-between;" do
+                    span style: "font-size:10px;color:#94a3b8;" do
+                      text_node number_to_human_size(img.blob.byte_size)
+                    end
+                    link_to "↗", url_for(img),
+                            target: "_blank", rel: "noopener noreferrer",
+                            title: "Open full size",
+                            style: "font-size:13px;color:#818cf8;text-decoration:none;font-weight:700;"
+                  end
+                end
+              end
+            end
+          end
         end
       end
     end

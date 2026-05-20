@@ -153,18 +153,17 @@ class BusinessSerializer < ActiveModel::Serializer
   # IMAGES
   # =================================
   def images
-    return {} unless object.profile_picture.attached? || object.shop_images.attached?
+    has_pp   = object.profile_picture.attached?
+    has_shop = object.shop_images.attached?
+    return {} unless has_pp || has_shop
 
     {
-      profile_picture: object.profile_picture.attached? ? object.profile_picture.blob.url : nil,
-
-      gallery: object.shop_images.map do |img|
-        { id: img.blob.id, url: img.blob.url }
-      end
+      profile_picture: has_pp ? attachment_url(object.profile_picture) : nil,
+      gallery: has_shop ? object.shop_images.map { |img| { id: img.blob.id, url: attachment_url(img) } } : []
     }
   end
-  
-  
+
+
 
   def favorites_count
     object.likes.size
@@ -177,5 +176,19 @@ class BusinessSerializer < ActiveModel::Serializer
     else
       object.likes.exists?(user_id: scope.id)
     end
+  end
+
+  private
+
+  # Builds a permanent Rails ActiveStorage redirect URL that works with any
+  # storage backend. Avoids blob.url which generates short-lived S3 presigned
+  # URLs (default 5 min TTL) that expire before the client renders the image.
+  def attachment_url(attachment)
+    return nil unless attachment&.attached?
+    base = ENV.fetch('RENDER_EXTERNAL_URL', 'https://twitter24-be.onrender.com').chomp('/')
+    blob = attachment.blob
+    "#{base}/rails/active_storage/blobs/redirect/#{blob.signed_id}/#{blob.filename}"
+  rescue StandardError
+    nil
   end
 end

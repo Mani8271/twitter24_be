@@ -68,7 +68,7 @@ class UserSerializer < ActiveModel::Serializer
   def profile_picture
     return nil unless object.profile_picture.attached?
 
-    object.profile_picture.blob.url
+    attachment_url(object.profile_picture)
   end
 
   def is_online
@@ -180,6 +180,17 @@ class UserSerializer < ActiveModel::Serializer
       is_expired:     object.subscription_expires_at.present? && object.subscription_expires_at < Time.current,
       usage:          usage
     }
+  end
+
+  private
+
+  def attachment_url(attachment)
+    return nil unless attachment&.attached?
+    base = ENV.fetch('RENDER_EXTERNAL_URL', 'https://twitter24-be.onrender.com').chomp('/')
+    blob = attachment.blob
+    "#{base}/rails/active_storage/blobs/redirect/#{blob.signed_id}/#{blob.filename}"
+  rescue StandardError
+    nil
   end
 end
 

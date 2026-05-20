@@ -3,6 +3,7 @@ class Offer < ApplicationRecord
   has_many_attached :media
 
   validates :title, :description, :offer_type, presence: true
+  validates :title, length: { maximum: 100 }
   validates :offer_type, inclusion: { in: %w[local global] }
 
   validate :validate_links_format
