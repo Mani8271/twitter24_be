@@ -18,11 +18,12 @@ class GlobalFeedSerializer < ActiveModel::Serializer
              :comments_count,
              :views_count,
              :liked_by_me,
+             :is_own_post,
              :posted_by,
              :business,
              :media,
              :created_at,
-             :created_user 
+             :created_user
 
   # =========================
   # COUNTS
@@ -46,6 +47,11 @@ class GlobalFeedSerializer < ActiveModel::Serializer
     else
       object.likes.exists?(user_id: scope.id)
     end
+  end
+
+  def is_own_post
+    return false unless scope
+    object.user_id == scope.id
   end
 
   # =========================

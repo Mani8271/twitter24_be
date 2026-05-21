@@ -3,6 +3,11 @@ class LikesController < ApplicationController
   before_action :set_likeable
 
   def create
+    # Prevent liking own content
+    if @likeable.respond_to?(:user_id) && @likeable.user_id == current_user.id
+      return render json: { error: "You cannot like your own content" }, status: :forbidden
+    end
+
     like = @likeable.likes.find_by(user: current_user)
 
     if like
@@ -22,7 +27,7 @@ class LikesController < ApplicationController
   private
 
   def set_likeable
-     allowed_types = %w[GlobalFeed FreedCrate Business]
+    allowed_types = %w[GlobalFeed Business]
 
     type = params[:likeable_type]
     raise ActiveRecord::RecordNotFound unless allowed_types.include?(type)

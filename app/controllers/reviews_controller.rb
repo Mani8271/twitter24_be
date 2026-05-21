@@ -20,9 +20,14 @@ class ReviewsController < ApplicationController
     # One review per user per business (update if exists)
     # =====================================================
     def create
+      # Prevent reviewing own business
+      if @business.user_id == current_user.id
+        return render json: { error: "You cannot review your own business" }, status: :forbidden
+      end
+
       review = @business.reviews.find_or_initialize_by(user: current_user)
       review.update!(rating: params[:rating], comment: params[:comment])
-  
+
       render json: { message: "Review submitted successfully" }, status: :ok
     end
   

@@ -16,7 +16,7 @@ class BusinessesController < ApplicationController
                 .includes(
                   :business_location, :business_hours, :business_contact,
                   :follows, :likes, :global_feeds,
-                  { user: :jobs },
+                  { user: [:jobs, :offers] },
                   profile_picture_attachment: :blob
                 )
                 .where(status: "approved")
@@ -43,6 +43,16 @@ class BusinessesController < ApplicationController
     businesses = businesses.where(
       "LOWER(businesses.name) LIKE :q OR LOWER(businesses.category) LIKE :q OR LOWER(businesses.about) LIKE :q",
       q: q
+    )
+  end
+
+  # ✅ Sort
+  case params[:sort]
+  when "newest_first"  then businesses = businesses.order(created_at: :desc)
+  when "oldest_first"  then businesses = businesses.order(created_at: :asc)
+  when "most_popular"
+    businesses = businesses.order(
+      Arel.sql("(SELECT COUNT(*) FROM follows WHERE follows.followable_type = 'Business' AND follows.followable_id = businesses.id) DESC")
     )
   end
 
@@ -74,24 +84,28 @@ def related
   loc      = business.business_location
   user_loc = @user_location
 
-  # Collect same-category businesses (excluding the current one)
+  # Collect same-category businesses (excluding the viewed business and current user's own)
+  excluded_ids = [business.id]
+
   same_cat = Business
                .includes(:business_location, :business_hours, :business_contact,
                          profile_picture_attachment: :blob)
                .where(status: "approved")
                .where(category: business.category)
-               .where.not(id: business.id)
+               .where.not(id: excluded_ids)
+               .where.not(user_id: current_user.id)
                .limit(6)
 
   results = same_cat.to_a
 
-  # If fewer than 3, fill with nearby businesses from other categories
+  # If fewer than 3, fill with businesses from other categories
   if results.size < 3
     other = Business
               .includes(:business_location, :business_hours, :business_contact,
                         profile_picture_attachment: :blob)
               .where(status: "approved")
-              .where.not(id: [business.id] + results.map(&:id))
+              .where.not(id: excluded_ids + results.map(&:id))
+              .where.not(user_id: current_user.id)
               .where.not(category: business.category)
               .limit(6 - results.size)
     results += other.to_a
@@ -116,7 +130,7 @@ end
                   :business_contact,
                   :business_hours,
                   :follows, :likes, :global_feeds,
-                  { user: :jobs },
+                  { user: [:jobs, :offers] },
                   shop_images_attachments: :blob,
                   profile_picture_attachment: :blob
                 ).find(params[:id])

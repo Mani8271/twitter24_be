@@ -17,11 +17,11 @@ class BusinessSerializer < ActiveModel::Serializer
              :followers_count,
              :is_online,
              :jobs_count,
+             :offers_count,
              :followed_by_me,
              :global_feeds_count,
              :local_feeds_count,
              :is_open,
-             :is_online,
              :open_days,
              :open_time,
              :business_hours_schedule,
@@ -30,7 +30,8 @@ class BusinessSerializer < ActiveModel::Serializer
              :distance_km,
              :images,
              :favorites_count,
-             :favorited_by_me
+             :favorited_by_me,
+             :is_own_business
 
   # =================================
   # COUNTS
@@ -41,6 +42,10 @@ class BusinessSerializer < ActiveModel::Serializer
 
   def jobs_count
     object.user.jobs.size
+  end
+
+  def offers_count
+    object.user.offers.size
   end
 
   def reviews_count
@@ -164,6 +169,11 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
 
+
+  def is_own_business
+    return false unless scope
+    object.user_id == scope.id
+  end
 
   def favorites_count
     object.likes.size

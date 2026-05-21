@@ -3,6 +3,11 @@ class FollowsController < ApplicationController
   before_action :set_followable
 
   def create
+    # Prevent following own business
+    if @followable.respond_to?(:user_id) && @followable.user_id == current_user.id
+      return render json: { error: "You cannot follow your own business" }, status: :forbidden
+    end
+
     follow = @followable.follows.find_by(user: current_user)
 
     if follow
