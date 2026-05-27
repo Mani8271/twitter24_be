@@ -473,7 +473,7 @@ class GlobalFeedsController < ApplicationController
     return unless require_business!
     return render json: { error: "Not authorized" }, status: :forbidden if @global_feed.user != current_user
 
-    @global_feed.assign_attributes(feed_params.except(:media))
+    @global_feed.assign_attributes(feed_params.except(:media, :title))
     normalize_tags(@global_feed)
     normalize_links(@global_feed)
 

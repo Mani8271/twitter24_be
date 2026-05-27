@@ -17,7 +17,8 @@ class AuthController < ApplicationController
     end
   end
 
-  MAX_OTP_RESENDS_PER_DAY = 5
+  # 1 initial send + 3 resends = 4 total sends allowed per 24-hour window.
+  MAX_OTP_RESENDS_PER_DAY = 4
 
   # POST /send_otp
   def send_otp
@@ -28,42 +29,70 @@ class AuthController < ApplicationController
       return render json: { error: "Mobile number must be exactly 10 digits and start with 6, 7, 8, or 9." }, status: :unprocessable_entity
     end
 
-    user = User.find_by(phone_number: phone_number)
-    return render(json: { error: "User not found. Please sign up first." }, status: :not_found) unless user
+    # Acquire a row-level lock inside a transaction so that concurrent requests
+    # for the same phone number are serialised — prevents the race where two
+    # simultaneous requests both pass the count check before either increments.
+    outcome = {}
 
-    # ── 60-second cooldown between consecutive resends ──────────────────────
-    last_otp = OtpCode.where(user_id: user.id).order(created_at: :desc).first
-    if last_otp && last_otp.created_at > 60.seconds.ago
-      remaining = (60 - (Time.current - last_otp.created_at).to_i)
-      return render json: { error: "Please wait #{remaining} seconds before requesting a new OTP." }, status: :too_many_requests
+    User.transaction do
+      user = User.lock.find_by(phone_number: phone_number)
+
+      unless user
+        outcome = { error: :not_found }
+        next
+      end
+
+      # ── 60-second cooldown between consecutive sends ───────────────────────
+      last_otp = OtpCode.where(user_id: user.id).order(created_at: :desc).first
+      if last_otp && last_otp.created_at > 60.seconds.ago
+        remaining = (60 - (Time.current - last_otp.created_at).to_i)
+        outcome = { error: :cooldown, remaining: remaining }
+        next
+      end
+
+      # ── Reset 24-hour window if it has expired ────────────────────────────
+      if user.otp_resend_window_start.nil? || user.otp_resend_window_start < 24.hours.ago
+        user.update_columns(otp_resend_count: 0, otp_resend_window_start: Time.current)
+      end
+
+      # ── Daily limit ────────────────────────────────────────────────────────
+      if user.otp_resend_count >= MAX_OTP_RESENDS_PER_DAY
+        window_resets_at = user.otp_resend_window_start + 24.hours
+        hours_left = ((window_resets_at - Time.current) / 3600).ceil
+        outcome = { error: :rate_limited, hours_left: hours_left }
+        next
+      end
+
+      otp = user.generate_otp
+      user.increment!(:otp_resend_count)
+
+      outcome = {
+        ok: true,
+        phone: user.phone_number,
+        otp: otp,
+        resends_remaining: MAX_OTP_RESENDS_PER_DAY - user.otp_resend_count
+      }
     end
 
-    # ── 24-hour resend limit ─────────────────────────────────────────────────
-    # Reset counter if the 24-hour window has passed
-    if user.otp_resend_window_start.nil? || user.otp_resend_window_start < 24.hours.ago
-      user.update_columns(otp_resend_count: 0, otp_resend_window_start: Time.current)
-    end
-
-    if user.otp_resend_count >= MAX_OTP_RESENDS_PER_DAY
-      window_resets_at = user.otp_resend_window_start + 24.hours
-      hours_left = ((window_resets_at - Time.current) / 3600).ceil
-      return render json: {
-        error: "You have reached the maximum of #{MAX_OTP_RESENDS_PER_DAY} OTP requests per day. Try again in #{hours_left} hour(s).",
+    case outcome[:error]
+    when :not_found
+      render json: { error: "User not found. Please sign up first." }, status: :not_found
+    when :cooldown
+      render json: { error: "Please wait #{outcome[:remaining]} seconds before requesting a new OTP." }, status: :too_many_requests
+    when :rate_limited
+      render json: {
+        error: "You have reached the maximum resend limit. Please try again after 24 hours.",
         resend_limit_reached: true,
-        resets_in_hours: hours_left
+        resets_in_hours: outcome[:hours_left]
       }, status: :too_many_requests
+    else
+      Rails.logger.info "OTP sent to #{outcome[:phone]}: #{outcome[:otp]} (send #{MAX_OTP_RESENDS_PER_DAY - outcome[:resends_remaining]}/#{MAX_OTP_RESENDS_PER_DAY} today)"
+      render json: {
+        message: "OTP sent to #{outcome[:phone]}",
+        otp: outcome[:otp],
+        resends_remaining: outcome[:resends_remaining]
+      }, status: :ok
     end
-
-    otp = user.generate_otp
-    user.increment!(:otp_resend_count)
-
-    Rails.logger.info "OTP sent to #{user.phone_number}: #{otp} (resend #{user.otp_resend_count}/#{MAX_OTP_RESENDS_PER_DAY} today)"
-
-    render json: {
-      message: "OTP sent to #{user.phone_number}",
-      otp: otp,
-      resends_remaining: MAX_OTP_RESENDS_PER_DAY - user.otp_resend_count
-    }, status: :ok
   end
 
   # POST /signin
@@ -97,13 +126,6 @@ class AuthController < ApplicationController
       return render json: {
         error: "account_inactive",
         message: "Your account has been deactivated. Please contact the administrator for assistance."
-      }, status: :forbidden
-    end
-
-    unless user.phone_verified
-      return render json: {
-        error: "phone_not_verified",
-        phone_number: user.phone_number
       }, status: :forbidden
     end
 

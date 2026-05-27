@@ -95,9 +95,13 @@ has_one :live_location, dependent: :destroy
 
  def effective_limit(feature_key)
    key = feature_key.to_s
+   # No active plan → no posting rights. Return 0 so check_limit! also blocks
+   # even if require_feature! is somehow skipped (defence-in-depth).
+   return 0 unless subscription_plan_id.present?
+
    if subscribed_at.present? && subscribed_limits.key?(key)
      val = subscribed_limits[key]
-     val.present? ? val.to_i : nil   # nil = unlimited
+     val.present? ? val.to_i : nil   # nil = unlimited on this plan
    else
      subscription_plan&.limit_for(key)
    end

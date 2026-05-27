@@ -80,9 +80,9 @@ end
 # GET /businesses/:id/related
 # =========================================================
 def related
+  current_user.live_locations.load
+
   business = Business.includes(:business_location).find(params[:id])
-  loc      = business.business_location
-  user_loc = @user_location
 
   # Collect same-category businesses (excluding the viewed business and current user's own)
   excluded_ids = [business.id]
@@ -135,9 +135,18 @@ end
                   profile_picture_attachment: :blob
                 ).find(params[:id])
 
+    # Forward client GPS coords to the serializer so distance reflects the
+    # user's actual current position rather than their last saved DB location.
+    opts = {}
+    if params[:lat].present? && params[:lng].present?
+      opts[:user_lat] = params[:lat].to_f
+      opts[:user_lng] = params[:lng].to_f
+    end
+
     render json: business,
            serializer: BusinessSerializer,
-           scope: current_user
+           scope: current_user,
+           **opts
   end
   
 

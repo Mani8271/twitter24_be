@@ -78,7 +78,7 @@ class OffersController < ApplicationController
       return unless require_business!
       return unauthorized unless @offer.user_id == current_user.id
   
-      if @offer.update(offer_params)
+      if @offer.update(offer_params.except(:title))
         render json: @offer
       else
         render json: { errors: @offer.errors.full_messages }, status: :unprocessable_entity

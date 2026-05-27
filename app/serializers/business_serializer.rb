@@ -137,19 +137,31 @@ class BusinessSerializer < ActiveModel::Serializer
     loc = object.business_location
     return 0 unless loc&.latitude && loc&.longitude
 
-    # Use detect (in-memory) when live_locations is preloaded; find_by otherwise.
-    # Controllers should call current_user.live_locations.load before serializing
-    # a list so this fires at most one query per request, not one per business.
-    user_loc = if scope.live_locations.loaded?
-                 scope.live_locations.detect(&:live_location_default)
-               else
-                 scope.live_locations.find_by(live_location_default: true)
-               end
+    # Prefer live GPS coordinates passed by the client via instance_options.
+    # Falls back to the DB-stored live_location so list views still work
+    # without requiring the client to append coords to every request.
+    override_lat = instance_options[:user_lat]
+    override_lng = instance_options[:user_lng]
 
-    return 0 unless user_loc&.latitude && user_loc&.longitude
+    if override_lat && override_lng
+      user_lat = override_lat
+      user_lng = override_lng
+    else
+      # Use detect (in-memory) when live_locations is preloaded; find_by otherwise.
+      # Controllers should call current_user.live_locations.load before serializing
+      # a list so this fires at most one query per request, not one per business.
+      user_loc = if scope.live_locations.loaded?
+                   scope.live_locations.detect(&:live_location_default)
+                 else
+                   scope.live_locations.find_by(live_location_default: true)
+                 end
+      return 0 unless user_loc&.latitude && user_loc&.longitude
+      user_lat = user_loc.latitude
+      user_lng = user_loc.longitude
+    end
 
     Geocoder::Calculations.distance_between(
-      [user_loc.latitude, user_loc.longitude],
+      [user_lat, user_lng],
       [loc.latitude, loc.longitude]
     ).round(2)
   end

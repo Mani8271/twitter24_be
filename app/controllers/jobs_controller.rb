@@ -87,7 +87,7 @@ class JobsController < ApplicationController
     return unless require_business!
     return unauthorized unless @job.user_id == current_user.id
 
-    if @job.update(job_params)
+    if @job.update(job_params.except(:job_title))
       render json: @job, serializer: JobSerializer, scope: current_user
     else
       render json: { errors: @job.errors.full_messages }, status: :unprocessable_entity
