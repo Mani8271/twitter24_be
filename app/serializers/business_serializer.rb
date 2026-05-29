@@ -207,9 +207,7 @@ class BusinessSerializer < ActiveModel::Serializer
   # URLs (default 5 min TTL) that expire before the client renders the image.
   def attachment_url(attachment)
     return nil unless attachment&.attached?
-    base = ENV.fetch('RENDER_EXTERNAL_URL', 'https://twitter24-be.onrender.com').chomp('/')
-    blob = attachment.blob
-    "#{base}/rails/active_storage/blobs/redirect/#{blob.signed_id}/#{blob.filename}"
+    rails_blob_url(attachment)
   rescue StandardError
     nil
   end

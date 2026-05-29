@@ -19,9 +19,7 @@ class CommentSerializer < ActiveModel::Serializer
     {
       id: u.id,
       name: u.name,
-      profile_picture: u.profile_picture.attached? ?
-        rails_blob_url(u.profile_picture, host: ENV["APP_HOST"] || "https://twitter24-be.onrender.com") :
-        nil
+      profile_picture: u.profile_picture.attached? ? rails_blob_url(u.profile_picture) : nil
     }
   end
 
