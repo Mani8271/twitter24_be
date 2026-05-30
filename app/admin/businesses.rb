@@ -20,18 +20,26 @@ ActiveAdmin.register Business do
 
   # ─── BATCH ACTIONS ────────────────────────────────────────────────────────
   batch_action :approve, confirm: "Approve selected businesses?" do |ids|
-    Business.where(id: ids).each { |b| b.update!(status: "approved") }
+    ActiveRecord::Base.transaction do
+      Business.where(id: ids).each { |b| b.update!(status: "approved") }
+    end
     redirect_to collection_path, notice: "#{ids.size} business(es) approved."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to collection_path, alert: "Batch approve failed: #{e.message}"
   end
 
   batch_action :reject,
                form: { rejection_reason: :textarea } do |ids, inputs|
     reason = inputs[:rejection_reason].presence
-    Business.where(id: ids).each do |b|
-      b.update!(status: "rejected", rejection_reason: reason)
-      OnboardingMailer.rejection_notification(b.user, b).deliver_now rescue nil
+    ActiveRecord::Base.transaction do
+      Business.where(id: ids).each do |b|
+        b.update!(status: "rejected", rejection_reason: reason)
+        OnboardingMailer.rejection_notification(b.user, b).deliver_now rescue nil
+      end
     end
     redirect_to collection_path, notice: "#{ids.size} business(es) rejected. Owners notified."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to collection_path, alert: "Batch reject failed: #{e.message}"
   end
 
   # ─── MEMBER ACTIONS ───────────────────────────────────────────────────────

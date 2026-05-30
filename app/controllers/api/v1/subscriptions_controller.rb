@@ -3,11 +3,23 @@ module Api
     class SubscriptionsController < ApplicationController
       # POST /api/v1/subscriptions/subscribe
       # Body: { plan_id: <integer> }
+      # NOTE: Paid plans require a successful payment first. Activation for paid
+      # plans happens automatically via the webhook or status-check flow. This
+      # endpoint only handles zero-cost (free/trial) plans directly.
       def subscribe
         plan = SubscriptionPlan.active.find_by(id: params[:plan_id])
 
         unless plan
           return render json: { error: "Plan not found or inactive" }, status: :not_found
+        end
+
+        # Block direct activation of paid plans — must go through payment flow.
+        if plan.amounts.to_i > 0
+          return render json: {
+            error:            "Payment is required to subscribe to this plan. Please use the payment flow.",
+            payment_required: true,
+            plan_id:          plan.id
+          }, status: :payment_required
         end
 
         if current_user.update(

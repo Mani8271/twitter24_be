@@ -7,10 +7,19 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-     origins '*'
+    # In production, set ALLOWED_ORIGINS to your frontend domain(s) comma-separated.
+    # e.g. ALLOWED_ORIGINS=https://twitter24.vercel.app,https://www.twitter24.com
+    # Falls back to localhost only when the env var is not set (development).
+    allowed = ENV.fetch("ALLOWED_ORIGINS", "http://localhost:3000")
+                 .split(",")
+                 .map(&:strip)
+                 .reject(&:blank?)
+
+    origins(*allowed)
 
     resource '*',
       headers: :any,
-      methods: [:get, :post, :put, :patch, :delete, :options, :head]
+      methods: [:get, :post, :put, :patch, :delete, :options, :head],
+      credentials: false
   end
 end

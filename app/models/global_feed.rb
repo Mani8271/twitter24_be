@@ -8,7 +8,11 @@ class GlobalFeed < ApplicationRecord
 
   validates :title, presence: true
   validates :title, length: { maximum: 100 }
+  validates :description, length: { maximum: 5000 }, allow_blank: true
   validates :category, presence: true
+
+  # Exclude posts from soft-deleted users in public listings
+  scope :from_active_users, -> { joins(:user).where(users: { deleted_at: nil }) }
 
   validates :feed_type, inclusion: { in: %w[global local] }
 

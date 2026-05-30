@@ -108,18 +108,36 @@ class OnboardingController < ApplicationController
     end
   end
 
+  ALLOWED_IMAGE_TYPES = %w[image/jpeg image/png image/webp image/gif].freeze
+  IMAGE_MAX_BYTES     = 10.megabytes
+
   # ===================== STEP 6 =====================
   # Images (ActiveStorage)
   # POST /onboarding/step6 (multipart/form-data)
   # profile_picture: file
   # shop_images[]: files
   def step6_images
-    # profile picture optional
+    # profile picture optional — validate before attaching
     if params[:profile_picture].present?
+      begin
+        validate_upload!(params[:profile_picture])
+      rescue ArgumentError => e
+        return render json: { error: e.message }, status: :unprocessable_entity
+      end
       business.profile_picture.attach(params[:profile_picture])
     end
 
-    # gallery images
+    # gallery images — validate each file
+    if params[:shop_images].present?
+      Array.wrap(params[:shop_images]).each do |img|
+        begin
+          validate_upload!(img)
+        rescue ArgumentError => e
+          return render json: { error: e.message }, status: :unprocessable_entity
+        end
+      end
+    end
+
     # Subscription plan limits apply only when managing an already-completed domain (My Domain page).
     # During initial onboarding the user has no subscription yet, so checks are skipped.
     if params[:shop_images].present?
@@ -180,7 +198,7 @@ class OnboardingController < ApplicationController
     )
 
     Rails.logger.info "[ContactOTP] #{phone_number}: #{otp}"
-    render json: { message: "OTP sent to #{phone_number}", otp: otp }, status: :ok
+    render json: { message: "OTP sent to #{phone_number}" }, status: :ok
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: "Could not generate OTP. Please try again." }, status: :unprocessable_entity
   end
@@ -275,7 +293,17 @@ end
     nil
   end
 
-   def create_onboarding_progress_for_business
+   def validate_upload!(file)
+    return if file.blank?
+    unless ALLOWED_IMAGE_TYPES.include?(file.content_type)
+      raise ArgumentError, "#{file.original_filename}: only JPEG, PNG, WebP, or GIF images are allowed."
+    end
+    if file.size > IMAGE_MAX_BYTES
+      raise ArgumentError, "#{file.original_filename}: file must be 10 MB or smaller."
+    end
+  end
+
+  def create_onboarding_progress_for_business
     OnboardingProgress.create!(
       user_id: current_user.id,
       business_id: business.id, # Linking the OnboardingProgress with the Business

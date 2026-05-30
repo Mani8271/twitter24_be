@@ -4,7 +4,11 @@ class Offer < ApplicationRecord
 
   validates :title, :description, :offer_type, presence: true
   validates :title, length: { maximum: 100 }
+  validates :description, length: { maximum: 5000 }
   validates :offer_type, inclusion: { in: %w[local global] }
+
+  # Exclude posts from soft-deleted users in public listings
+  scope :from_active_users, -> { joins(:user).where(users: { deleted_at: nil }) }
 
   validate :validate_links_format
   validate :location_required_for_local

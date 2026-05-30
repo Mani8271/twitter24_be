@@ -17,6 +17,8 @@ class Business < ApplicationRecord
     "Finance",
   ].freeze
 
+  has_paper_trail only: [:status, :rejection_reason], meta: { admin_action: true }
+
   belongs_to :user
 
   has_one :business_contact, dependent: :destroy

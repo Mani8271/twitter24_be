@@ -18,7 +18,7 @@ class JobsController < ApplicationController
     per_page = 20
     page     = [params[:page].to_i, 1].max
 
-    jobs = Job.all
+    jobs = Job.from_active_users
 
     jobs = jobs.where(user_id: current_user.id) if params[:my] == "true"
     jobs = jobs.where(user_id: params[:user_id]) if params[:user_id].present?

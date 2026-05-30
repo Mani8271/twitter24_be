@@ -135,11 +135,18 @@ module Api
       def valid_webhook_credentials?
         expected_user = ENV.fetch("PHONEPE_WEBHOOK_USERNAME", "")
         expected_pass = ENV.fetch("PHONEPE_WEBHOOK_PASSWORD", "")
-        return true if expected_user.blank?
+
+        # Reject all webhook calls when credentials are not configured — this
+        # prevents accidental subscription activations in a misconfigured env.
+        if expected_user.blank?
+          Rails.logger.warn "[PaymentWebhook] PHONEPE_WEBHOOK_USERNAME not configured — rejecting request"
+          return false
+        end
 
         credentials = ActionController::HttpAuthentication::Basic.user_name_and_password(request) rescue [nil, nil]
-        # Accept if no credentials sent (PhonePe validation ping) OR credentials match
-        return true if credentials[0].blank?
+
+        # Reject unsigned requests when credentials are expected
+        return false if credentials[0].blank?
 
         ActiveSupport::SecurityUtils.secure_compare(credentials[0].to_s, expected_user) &&
           ActiveSupport::SecurityUtils.secure_compare(credentials[1].to_s, expected_pass)

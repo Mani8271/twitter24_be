@@ -272,7 +272,7 @@ class GlobalFeedsController < ApplicationController
       }
     end
 
-    feeds = GlobalFeed.where.not(user_id: current_user.id).order(created_at: :desc)
+    feeds = GlobalFeed.from_active_users.where.not(user_id: current_user.id).order(created_at: :desc)
 
     # 1) TYPE filter (global/local)
     if params[:type].present?
@@ -361,10 +361,12 @@ class GlobalFeedsController < ApplicationController
       user_lat  = params[:lat].to_f
       user_lng  = params[:lng].to_f
       direction = sort_param == "nearest_first" ? "ASC" : "DESC"
+      haversine_sort_sql = sanitize_sql_array([
+        "(6371 * acos(LEAST(1.0, cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))) #{direction}",
+        user_lat, user_lng, user_lat
+      ])
       feeds = feeds.where("latitude IS NOT NULL AND longitude IS NOT NULL")
-                   .reorder(Arel.sql(
-                     "(6371 * acos(LEAST(1.0, cos(radians(#{user_lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(#{user_lng})) + sin(radians(#{user_lat})) * sin(radians(latitude))))) #{direction}"
-                   ))
+                   .reorder(Arel.sql(haversine_sort_sql))
     elsif sort_param == "oldest_first"
       feeds = feeds.reorder(created_at: :asc)
     elsif sort_param == "most_popular"

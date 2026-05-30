@@ -89,7 +89,6 @@ class AuthController < ApplicationController
       Rails.logger.info "OTP sent to #{outcome[:phone]}: #{outcome[:otp]} (send #{MAX_OTP_RESENDS_PER_DAY - outcome[:resends_remaining]}/#{MAX_OTP_RESENDS_PER_DAY} today)"
       render json: {
         message: "OTP sent to #{outcome[:phone]}",
-        otp: outcome[:otp],
         resends_remaining: outcome[:resends_remaining]
       }, status: :ok
     end
@@ -110,12 +109,8 @@ class AuthController < ApplicationController
 
     user = User.find_by(phone_number: phone_number)
 
-    unless user
-      return render json: { error: "This phone number is not registered. Please sign up first." }, status: :not_found
-    end
-
-    unless user.authenticate(password)
-      return render json: { error: "Incorrect password. Please try again." }, status: :unauthorized
+    unless user&.authenticate(password)
+      return render json: { error: "Invalid phone number or password. Please try again." }, status: :unauthorized
     end
 
     if user.deleted?

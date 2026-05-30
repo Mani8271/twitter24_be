@@ -4,7 +4,12 @@ class Job < ApplicationRecord
 
   validates :job_title, :description, presence: true
   validates :job_title, length: { maximum: 100 }
+  validates :description, length: { maximum: 5000 }
+  validates :skills_required, length: { maximum: 2000 }, allow_blank: true
   validates :job_type, inclusion: { in: %w[full_time part_time contract internship freelance] }, allow_blank: true
+
+  # Exclude posts from soft-deleted users in public listings
+  scope :from_active_users, -> { joins(:user).where(users: { deleted_at: nil }) }
 
   validate :validate_links_format
 

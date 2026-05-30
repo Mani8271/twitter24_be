@@ -9,7 +9,11 @@ class UsersController < ApplicationController
   # PATCH /me
   def update_me
     if current_user.update(user_params)
-      attach_profile_picture
+      begin
+        attach_profile_picture
+      rescue ArgumentError => e
+        return render json: { errors: [e.message] }, status: :unprocessable_entity
+      end
       render json: current_user, serializer: UserSerializer
     else
       render json: { errors: current_user.errors.full_messages },
@@ -31,7 +35,11 @@ class UsersController < ApplicationController
     end
   
     if current_user.update(password: params[:new_password])
-      render json: { message: "Password updated successfully" }, status: :ok
+      # Invalidate all existing sessions by bumping the token version.
+      # The caller's current token remains valid for this request but any
+      # other open sessions (other devices / tabs) will be rejected.
+      current_user.increment!(:token_version)
+      render json: { message: "Password updated successfully. Please log in again on other devices." }, status: :ok
     else
       render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
     end
@@ -60,6 +68,19 @@ class UsersController < ApplicationController
 
   def attach_profile_picture
     return unless params[:profile_picture].present?
-    current_user.profile_picture.attach(params[:profile_picture])
+
+    file = params[:profile_picture]
+    allowed_types = %w[image/jpeg image/png image/webp image/gif]
+    max_size_bytes = 10.megabytes
+
+    unless allowed_types.include?(file.content_type)
+      raise ArgumentError, "Profile picture must be a JPEG, PNG, WebP, or GIF."
+    end
+
+    if file.size > max_size_bytes
+      raise ArgumentError, "Profile picture must be 10 MB or smaller."
+    end
+
+    current_user.profile_picture.attach(file)
   end
 end

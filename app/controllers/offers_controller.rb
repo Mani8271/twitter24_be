@@ -13,7 +13,7 @@ class OffersController < ApplicationController
       per_page = 10
       page     = [params[:page].to_i, 1].max
 
-      offers = Offer.active.order(created_at: :desc)
+      offers = Offer.from_active_users.active.order(created_at: :desc)
 
       offers = offers.by_type(params[:offer_type])
 

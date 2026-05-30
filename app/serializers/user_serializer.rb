@@ -101,7 +101,6 @@ class UserSerializer < ActiveModel::Serializer
       requested_at:     req.requested_at,
       rejection_reason: req.rejection_reason,
       rejected_at:      req.rejected_at,
-      rejected_by:      req.rejected_by,
     }
   end
 

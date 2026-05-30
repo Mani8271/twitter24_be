@@ -49,8 +49,14 @@ gem "sassc-rails"
 gem 'jwt'
  gem 'pry'
  gem 'rack-cors'
+ gem 'rack-attack'
 
  gem "aws-sdk-s3", require: false
+
+ gem "sentry-ruby"
+ gem "sentry-rails"
+
+ gem "paper_trail"
 
  
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
