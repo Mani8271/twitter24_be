@@ -2,6 +2,8 @@ class User < ApplicationRecord
   has_secure_password
   has_one_attached :profile_picture
 
+  attribute :status, :string, default: ""
+
   default_scope { where(deleted_at: nil) }
 
   def soft_delete!

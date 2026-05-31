@@ -185,7 +185,7 @@ class UserSerializer < ActiveModel::Serializer
 
   def attachment_url(attachment)
     return nil unless attachment&.attached?
-    rails_blob_url(attachment)
+    attachment.blob.url(expires_in: 7.days)
   rescue StandardError
     nil
   end

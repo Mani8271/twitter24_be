@@ -40,6 +40,7 @@ class ReviewsController < ApplicationController
     def review_json(r)
       {
         id: r.id,
+        user_id: r.user_id,
         user_name: r.user.account_type == "business" ? r.user.business&.name : r.user.name,
         rating: r.rating,
         comment: r.comment,

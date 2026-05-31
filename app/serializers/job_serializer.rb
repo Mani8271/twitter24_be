@@ -33,7 +33,7 @@ class JobSerializer < ActiveModel::Serializer
   def image_urls
     return [] unless object.images.attached?
     object.images.map do |img|
-      rails_blob_url(img)
+      img.blob.url(expires_in: 7.days)
     end
   end
 end

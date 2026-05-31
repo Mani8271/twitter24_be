@@ -71,7 +71,7 @@ class GlobalFeedSerializer < ActiveModel::Serializer
     id: biz.id,
     name: biz.name,
     category: biz.category,
-profile_picture: biz.profile_picture.attached? ? rails_blob_url(biz.profile_picture) : nil
+profile_picture: biz.profile_picture.attached? ? biz.profile_picture.blob.url(expires_in: 7.days) : nil
   }
 end
 
@@ -83,7 +83,7 @@ def created_user
   {
     id: user.id,
     name: user.name,
-    profile_picture: user.profile_picture.attached? ? rails_blob_url(user.profile_picture) : nil
+    profile_picture: user.profile_picture.attached? ? user.profile_picture.blob.url(expires_in: 7.days) : nil
   }
 end
 
@@ -96,7 +96,7 @@ end
   object.media.map do |file|
     {
       id: file.id,
-        url: rails_blob_url(file),
+        url: file.blob.url(expires_in: 7.days),
       content_type: file.content_type
     }
   end

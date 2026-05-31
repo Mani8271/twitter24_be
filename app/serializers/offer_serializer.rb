@@ -23,7 +23,7 @@ class OfferSerializer < ActiveModel::Serializer
     return [] unless object.media.attached?
     object.media.map do |attachment|
       {
-        url:          rails_blob_url(attachment),
+        url:          attachment.blob.url(expires_in: 7.days),
         content_type: attachment.content_type
       }
     end
@@ -36,7 +36,7 @@ class OfferSerializer < ActiveModel::Serializer
 
   def poster_avatar
     return nil unless object.user.profile_picture.attached?
-    rails_blob_url(object.user.profile_picture)
+    object.user.profile_picture.blob.url(expires_in: 7.days)
   rescue
     nil
   end

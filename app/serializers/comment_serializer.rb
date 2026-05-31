@@ -19,7 +19,7 @@ class CommentSerializer < ActiveModel::Serializer
     {
       id: u.id,
       name: u.name,
-      profile_picture: u.profile_picture.attached? ? rails_blob_url(u.profile_picture) : nil
+      profile_picture: u.profile_picture.attached? ? u.profile_picture.blob.url(expires_in: 7.days) : nil
     }
   end
 

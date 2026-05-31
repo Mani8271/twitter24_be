@@ -165,18 +165,18 @@ class OnboardingController < ApplicationController
       business.shop_images.attach(params[:shop_images])
     end
 
-    if business.shop_images.count < 3
-      return render json: { error: "Please upload at least 3 shop images." }, status: :bad_request
-    end
-
-    mark_step_done(6)
-
     if progress.completed
-      business.update!(status: "submitted", rejection_reason: nil)
-      OnboardingMailer.admin_review_notification(current_user, business).deliver_now
-    end
+      # Edit mode (My Domain page) — no minimum count, no step marking, no admin re-notification
+      render json: { message: "Gallery updated successfully" }, status: :ok
+    else
+      # Initial onboarding — enforce the 3-image minimum
+      if business.shop_images.count < 3
+        return render json: { error: "Please upload at least 3 shop images." }, status: :bad_request
+      end
 
-    render json: { message: "Successfully saved details", progress: progress }, status: :ok
+      mark_step_done(6)
+      render json: { message: "Successfully saved details", progress: progress }, status: :ok
+    end
   end
 
   # ===================== CONTACT OTP =====================
@@ -232,7 +232,7 @@ class OnboardingController < ApplicationController
       documents: business.business_document.as_json(except: [:created_at, :updated_at]),
       images: {
         profile_picture: business.profile_picture.attached? ? attachment_url(business.profile_picture) : nil,
-        shop_images: business.shop_images.map { |img| attachment_url(img) }
+        shop_images: business.shop_images.map { |img| img.blob.url(expires_in: 7.days) }
       }
     ),
     steps_completed: progress.steps_completed,
@@ -274,7 +274,7 @@ end
 
     render json: {
       profile_picture: business&.profile_picture&.attached? ? attachment_url(business.profile_picture) : nil,
-      shop_images: business&.shop_images&.map { |img| attachment_url(img) } || []
+      shop_images: business&.shop_images&.map { |img| img.blob.url(expires_in: 7.days) } || []
     }
   end
 
@@ -283,12 +283,9 @@ end
 
   private
 
-  # Uses the request host so the URL matches the origin that clients connect to.
-  # Avoids blob.url which generates expiring S3 presigned URLs.
   def attachment_url(attachment)
     return nil unless attachment&.attached?
-    blob = attachment.blob
-    "#{request.base_url}/rails/active_storage/blobs/redirect/#{blob.signed_id}/#{blob.filename}"
+    attachment.blob.url(expires_in: 7.days)
   rescue StandardError
     nil
   end

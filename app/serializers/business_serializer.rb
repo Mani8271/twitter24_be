@@ -41,11 +41,11 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def jobs_count
-    object.user.jobs.size
+    object.user.jobs.size || 0
   end
 
   def offers_count
-    object.user.offers.size
+    object.user.offers.size || 0
   end
 
   def reviews_count
@@ -53,7 +53,7 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def followers_count
-    object.follows.size
+    object.follows.size || 0
   end
 
   def followed_by_me
@@ -176,7 +176,7 @@ class BusinessSerializer < ActiveModel::Serializer
 
     {
       profile_picture: has_pp ? attachment_url(object.profile_picture) : nil,
-      gallery: has_shop ? object.shop_images.map { |img| { id: img.blob.id, url: attachment_url(img) } } : []
+      gallery: has_shop ? object.shop_images.map { |img| { id: img.blob.id, url: img.blob.url(expires_in: 7.days) } } : []
     }
   end
 
@@ -202,12 +202,9 @@ class BusinessSerializer < ActiveModel::Serializer
 
   private
 
-  # Builds a permanent Rails ActiveStorage redirect URL that works with any
-  # storage backend. Avoids blob.url which generates short-lived S3 presigned
-  # URLs (default 5 min TTL) that expire before the client renders the image.
   def attachment_url(attachment)
     return nil unless attachment&.attached?
-    rails_blob_url(attachment)
+    attachment.blob.url(expires_in: 7.days)
   rescue StandardError
     nil
   end

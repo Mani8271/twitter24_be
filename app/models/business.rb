@@ -17,7 +17,7 @@ class Business < ApplicationRecord
     "Finance",
   ].freeze
 
-  has_paper_trail only: [:status, :rejection_reason], meta: { admin_action: true }
+  has_paper_trail only: [:status, :rejection_reason]
 
   belongs_to :user
 
