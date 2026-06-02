@@ -9,6 +9,7 @@ class OfferSerializer < ActiveModel::Serializer
              :longitude,
              :address,
              :reach_distance,
+             :valid_from,
              :valid_till,
              :tags,
              :disappearing_days,
@@ -16,8 +17,44 @@ class OfferSerializer < ActiveModel::Serializer
              :media,
              :created_at,
              :user_id,
-             :poster_name,
-             :poster_avatar
+             :is_my_post,
+             :is_own_post,
+             :business,
+             :created_user
+
+  def is_my_post
+    scope&.id == object.user_id
+  end
+
+  def is_own_post
+    scope&.id == object.user_id
+  end
+
+  def business
+    return nil unless object.user.account_type == "business"
+    biz = object.user.business
+    return nil unless biz
+    {
+      id:              biz.id,
+      name:            biz.name,
+      category:        biz.category,
+      profile_picture: biz.profile_picture.attached? ? biz.profile_picture.blob.url(expires_in: 7.days) : nil
+    }
+  rescue
+    nil
+  end
+
+  def created_user
+    user = object.user
+    return nil unless user
+    {
+      id:              user.id,
+      name:            user.name,
+      profile_picture: user.profile_picture.attached? ? user.profile_picture.blob.url(expires_in: 7.days) : nil
+    }
+  rescue
+    nil
+  end
 
   def media
     return [] unless object.media.attached?
@@ -27,17 +64,5 @@ class OfferSerializer < ActiveModel::Serializer
         content_type: attachment.content_type
       }
     end
-  end
-
-  def poster_name
-    user = object.user
-    user.account_type == "business" ? user.business&.name : user.name
-  end
-
-  def poster_avatar
-    return nil unless object.user.profile_picture.attached?
-    object.user.profile_picture.blob.url(expires_in: 7.days)
-  rescue
-    nil
   end
 end

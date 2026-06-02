@@ -22,6 +22,12 @@ module Api
           }, status: :payment_required
         end
 
+        # Only wipe usage counters when the user is switching to a different plan.
+        # Renewing the same plan (re-subscribe after expiry) preserves the cumulative
+        # usage so that expired posts don't silently restore posting quota.
+        switching_plan = current_user.subscription_plan_id != plan.id
+        new_usage      = switching_plan ? {} : (current_user.subscription_usage || {})
+
         if current_user.update(
           subscription_plan_id:         plan.id,
           is_subscription_completed:    true,
@@ -33,8 +39,7 @@ module Api
           subscribed_disappear_days:    plan.disappear_days,
           subscribed_at:                Time.current,
           subscription_expires_at:      Time.current + 30.days,
-          # ── Reset usage counters for the new subscription cycle ──────────
-          subscription_usage:           {}
+          subscription_usage:           new_usage
         )
           render json: current_user, serializer: UserSerializer, status: :ok
         else

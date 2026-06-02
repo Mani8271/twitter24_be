@@ -73,6 +73,7 @@ class JobsController < ApplicationController
 
     job = current_user.jobs.build(job_params)
     job.reach_distance = current_user.effective_range("job_posts") || 10
+    normalize_links(job)
 
     if job.save
       current_user.increment_subscription_usage!("job_posts")
@@ -87,7 +88,9 @@ class JobsController < ApplicationController
     return unless require_business!
     return unauthorized unless @job.user_id == current_user.id
 
-    if @job.update(job_params.except(:job_title))
+    @job.assign_attributes(job_params.except(:job_title))
+    normalize_links(@job)
+    if @job.save
       render json: @job, serializer: JobSerializer, scope: current_user
     else
       render json: { errors: @job.errors.full_messages }, status: :unprocessable_entity
@@ -127,8 +130,36 @@ class JobsController < ApplicationController
       :tags,
       :disappearing_days,
       images: [],
-      links: [:button_name, :url]
+      links: [:name, :url]
     )
+  end
+
+  def normalize_links(job)
+    return unless params[:links].present?
+
+    raw = params[:links]
+    links_array =
+      if raw.is_a?(String)
+        begin
+          parsed = JSON.parse(raw)
+          parsed.is_a?(Array) ? parsed : [parsed]
+        rescue JSON::ParserError
+          []
+        end
+      elsif raw.is_a?(Array)
+        raw
+      elsif raw.is_a?(ActionController::Parameters)
+        h = raw.to_unsafe_h
+        h.keys.all? { |k| k.to_s =~ /^\d+$/ } ? h.values : [h]
+      elsif raw.is_a?(Hash)
+        raw.keys.all? { |k| k.to_s =~ /^\d+$/ } ? raw.values : [raw]
+      else
+        []
+      end
+
+    job.links = links_array.map do |l|
+      l.is_a?(ActionController::Parameters) ? l.to_unsafe_h : l
+    end
   end
 
   def unauthorized

@@ -158,7 +158,12 @@ module Api
 
       def activate_subscription(payment)
         plan = payment.subscription_plan
-        payment.user.update!(
+        user = payment.user
+
+        switching_plan = user.subscription_plan_id != plan.id
+        new_usage      = switching_plan ? {} : (user.subscription_usage || {})
+
+        user.update!(
           subscription_plan_id:      plan.id,
           is_subscription_completed: true,
           subscribed_features:       plan.features,
@@ -166,7 +171,8 @@ module Api
           subscribed_ranges:         plan.ranges,
           subscribed_disappear_days: plan.disappear_days,
           subscribed_at:             Time.current,
-          subscription_expires_at:   Time.current + 30.days
+          subscription_expires_at:   Time.current + 30.days,
+          subscription_usage:        new_usage
         )
       end
 

@@ -40,7 +40,7 @@ class OffersController < ApplicationController
       offers = offers.offset((page - 1) * per_page).limit(per_page)
 
       render json: {
-        offers:  offers,
+        offers: ActiveModelSerializers::SerializableResource.new(offers, each_serializer: OfferSerializer, scope: current_user).as_json,
         meta: {
           page:       page,
           per_page:   per_page,
@@ -53,7 +53,7 @@ class OffersController < ApplicationController
   
     # GET /api/v1/offers/:id
     def show
-      render json: @offer
+      render json: @offer, serializer: OfferSerializer, scope: current_user
     end
   
     # POST /api/v1/offers
@@ -64,10 +64,14 @@ class OffersController < ApplicationController
 
       offer = current_user.offers.build(offer_params)
       offer.reach_distance = current_user.effective_range("offers") || 10
+      normalize_links(offer)
+      if offer.disappearing_days.present? && offer.valid_till.blank?
+        offer.valid_till = Time.current + offer.disappearing_days.days
+      end
 
       if offer.save
         current_user.increment_subscription_usage!("offers")
-        render json: offer, status: :created
+        render json: offer, serializer: OfferSerializer, scope: current_user, status: :created
       else
         render json: { errors: offer.errors.full_messages }, status: :unprocessable_entity
       end
@@ -77,9 +81,11 @@ class OffersController < ApplicationController
     def update
       return unless require_business!
       return unauthorized unless @offer.user_id == current_user.id
-  
-      if @offer.update(offer_params.except(:title))
-        render json: @offer
+
+      @offer.assign_attributes(offer_params.except(:title))
+      normalize_links(@offer)
+      if @offer.save
+        render json: @offer, serializer: OfferSerializer, scope: current_user
       else
         render json: { errors: @offer.errors.full_messages }, status: :unprocessable_entity
       end
@@ -101,21 +107,48 @@ class OffersController < ApplicationController
     end
   
     def offer_params
-      permitted = params.permit(
+      params.permit(
         :title,
         :description,
         :offer_type,
         :latitude,
         :longitude,
         :address,
+        :valid_from,
         :valid_till,
         :tags,
         :disappearing_days,
         media: [],
-        links: [:button_name, :url]
+        links: [:name, :url]
       )
-      permitted[:links] = permitted[:links].map(&:to_h) if permitted[:links].present?
-      permitted
+    end
+
+    def normalize_links(offer)
+      return unless params[:links].present?
+
+      raw = params[:links]
+      links_array =
+        if raw.is_a?(String)
+          begin
+            parsed = JSON.parse(raw)
+            parsed.is_a?(Array) ? parsed : [parsed]
+          rescue JSON::ParserError
+            []
+          end
+        elsif raw.is_a?(Array)
+          raw
+        elsif raw.is_a?(ActionController::Parameters)
+          h = raw.to_unsafe_h
+          h.keys.all? { |k| k.to_s =~ /^\d+$/ } ? h.values : [h]
+        elsif raw.is_a?(Hash)
+          raw.keys.all? { |k| k.to_s =~ /^\d+$/ } ? raw.values : [raw]
+        else
+          []
+        end
+
+      offer.links = links_array.map do |l|
+        l.is_a?(ActionController::Parameters) ? l.to_unsafe_h : l
+      end
     end
   
     def unauthorized
