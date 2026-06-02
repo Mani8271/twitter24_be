@@ -18,7 +18,8 @@ class UserSerializer < ActiveModel::Serializer
              :subscription_plan,
              :billing_address,
              :feature_blocks,
-             :upgrade_request_status
+             :upgrade_request_status,
+             :is_new_business_user
 
   # ✅ Only for business accounts
   attribute :status, if: :business_account?
