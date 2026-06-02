@@ -8,10 +8,11 @@
 # #     MovieGenre.find_or_create_by!(name: genre_name)
 # #   end
 
-# AdminUser.find_or_create_by!(email: 'twitter24official@gmail.com') do |u|
-#   u.password              = 'Twitter24'
-#   u.password_confirmation = 'Twitter24'
-# end
+AdminUser.find_or_create_by!(email: 'twitter24official@gmail.com') do |u|
+  u.password              = 'Twitter24'
+  u.password_confirmation = 'Twitter24'
+end
+
 # # ─── Legal Content ─────────────────────────────────────────────────────────────
 # TERMS_HTML = <<~HTML
 #   <style>
