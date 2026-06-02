@@ -8,73 +8,73 @@
 # #     MovieGenre.find_or_create_by!(name: genre_name)
 # #   end
 
-AdminUser.find_or_create_by!(email: 'twitter24official@gmail.com') do |u|
-  u.password              = 'Twitter24'
-  u.password_confirmation = 'Twitter24'
-end
+# AdminUser.find_or_create_by!(email: 'twitter24official@gmail.com') do |u|
+#   u.password              = 'Twitter24'
+#   u.password_confirmation = 'Twitter24'
+# end
 
-# # ─── Legal Content ─────────────────────────────────────────────────────────────
-# TERMS_HTML = <<~HTML
-#   <style>
-#     .terms-container { font-family: inherit; line-height: 1.7; }
-#     .terms-container h2 { margin-top: 16px; font-size: 18px; border-left: 4px solid #9333EA; padding-left: 10px; }
-#     .terms-container p { margin: 10px 0; font-size: 14px; }
-#     .terms-container ul { margin: 10px 0 20px 20px; font-size: 14px; }
-#     .terms-container li { margin-bottom: 6px; }
-#     .terms-container .section { margin-bottom: 20px; }
-#     .terms-container .highlight { font-weight: bold; }
-#   </style>
-#   <div class="terms-container">
-#     <div class="section"><h2>1. Acceptance of Terms</h2><p>By using Witter24, you agree to these Terms, our Privacy Policy, and all applicable Indian laws, including the Information Technology Act, 2000, IT Rules 2021, and DPDP Act 2023.</p></div>
-#     <div class="section"><h2>2. Nature of Platform</h2><p>Witter24 is a hyperlocal community, updates, jobs, marketplace, and social utility platform.</p><p>Witter24 functions as an intermediary under Indian law and exercises due diligence over user-generated content.</p></div>
-#     <div class="section"><h2>3. User Eligibility</h2><ul><li>Users must be 18+</li><li>Minors require verifiable parental consent</li><li>No fake, bot, or impersonation accounts</li><li>Accurate registration information is mandatory</li></ul><p>This supports DPDP child-data protection obligations.</p></div>
-#     <div class="section"><h2>4. Acceptable Use</h2><p>Users shall not post or transmit:</p><ul><li>Illegal content</li><li>Hate speech</li><li>Obscenity</li><li>Defamation</li><li>Fake jobs</li><li>Fraudulent marketplace listings</li><li>Malware / phishing links</li><li>Misinformation</li><li>Unlawful political manipulation</li><li>Content threatening public order</li></ul></div>
-#     <div class="section"><h2>5. Hyperlocal Safety</h2><p>Misuse for stalking, doxxing, tracking minors, or targeted harassment is strictly prohibited. Violations may lead to immediate suspension, police complaint, or lawful disclosure to cybercrime authorities.</p></div>
-#     <div class="section"><h2>6. Marketplace &amp; Jobs Disclaimer</h2><p>Witter24 only provides listing infrastructure. We are not a party to employment contracts, buyer-seller disputes, or payment disputes. Users must independently verify all transactions.</p></div>
-#     <div class="section"><h2>7. User Content License</h2><p>Users retain ownership of their content. By posting, users grant Witter24 a non-exclusive, revocable, worldwide, royalty-free license to host, display, and distribute content within the platform.</p></div>
-#     <div class="section"><h2>8. Grievance Officer</h2><p>Witter24 shall appoint a Grievance Officer as required by IT Rules 2021. Acknowledgement: 24 hours. Action: 15 days.</p></div>
-#     <div class="section"><h2>9. Suspension &amp; Takedown</h2><p>We may suspend accounts for repeated violations, fraud, cyber abuse, fake emergency alerts, marketplace scams, legal notices, or government requests.</p></div>
-#     <div class="section"><h2>10. Governing Law</h2><p>These Terms are governed by the laws of India.</p></div>
-#   </div>
-# HTML
+# ─── Legal Content ─────────────────────────────────────────────────────────────
+TERMS_HTML = <<~HTML
+  <style>
+    .terms-container { font-family: inherit; line-height: 1.7; }
+    .terms-container h2 { margin-top: 16px; font-size: 18px; border-left: 4px solid #9333EA; padding-left: 10px; }
+    .terms-container p { margin: 10px 0; font-size: 14px; }
+    .terms-container ul { margin: 10px 0 20px 20px; font-size: 14px; }
+    .terms-container li { margin-bottom: 6px; }
+    .terms-container .section { margin-bottom: 20px; }
+    .terms-container .highlight { font-weight: bold; }
+  </style>
+  <div class="terms-container">
+    <div class="section"><h2>1. Acceptance of Terms</h2><p>By using Witter24, you agree to these Terms, our Privacy Policy, and all applicable Indian laws, including the Information Technology Act, 2000, IT Rules 2021, and DPDP Act 2023.</p></div>
+    <div class="section"><h2>2. Nature of Platform</h2><p>Witter24 is a hyperlocal community, updates, jobs, marketplace, and social utility platform.</p><p>Witter24 functions as an intermediary under Indian law and exercises due diligence over user-generated content.</p></div>
+    <div class="section"><h2>3. User Eligibility</h2><ul><li>Users must be 18+</li><li>Minors require verifiable parental consent</li><li>No fake, bot, or impersonation accounts</li><li>Accurate registration information is mandatory</li></ul><p>This supports DPDP child-data protection obligations.</p></div>
+    <div class="section"><h2>4. Acceptable Use</h2><p>Users shall not post or transmit:</p><ul><li>Illegal content</li><li>Hate speech</li><li>Obscenity</li><li>Defamation</li><li>Fake jobs</li><li>Fraudulent marketplace listings</li><li>Malware / phishing links</li><li>Misinformation</li><li>Unlawful political manipulation</li><li>Content threatening public order</li></ul></div>
+    <div class="section"><h2>5. Hyperlocal Safety</h2><p>Misuse for stalking, doxxing, tracking minors, or targeted harassment is strictly prohibited. Violations may lead to immediate suspension, police complaint, or lawful disclosure to cybercrime authorities.</p></div>
+    <div class="section"><h2>6. Marketplace &amp; Jobs Disclaimer</h2><p>Witter24 only provides listing infrastructure. We are not a party to employment contracts, buyer-seller disputes, or payment disputes. Users must independently verify all transactions.</p></div>
+    <div class="section"><h2>7. User Content License</h2><p>Users retain ownership of their content. By posting, users grant Witter24 a non-exclusive, revocable, worldwide, royalty-free license to host, display, and distribute content within the platform.</p></div>
+    <div class="section"><h2>8. Grievance Officer</h2><p>Witter24 shall appoint a Grievance Officer as required by IT Rules 2021. Acknowledgement: 24 hours. Action: 15 days.</p></div>
+    <div class="section"><h2>9. Suspension &amp; Takedown</h2><p>We may suspend accounts for repeated violations, fraud, cyber abuse, fake emergency alerts, marketplace scams, legal notices, or government requests.</p></div>
+    <div class="section"><h2>10. Governing Law</h2><p>These Terms are governed by the laws of India.</p></div>
+  </div>
+HTML
 
-# PRIVACY_HTML = <<~HTML
-#   <style>
-#     .privacy-container { font-family: inherit; line-height: 1.7; }
-#     .privacy-container h2 { margin-top: 16px; font-size: 18px; border-left: 4px solid #9333EA; padding-left: 10px; }
-#     .privacy-container h3 { font-size: 15px; margin-top: 12px; font-weight: 600; }
-#     .privacy-container p { margin: 10px 0; font-size: 14px; }
-#     .privacy-container ul { margin: 10px 0 20px 20px; font-size: 14px; }
-#     .privacy-container li { margin-bottom: 6px; }
-#     .privacy-container .section { margin-bottom: 20px; }
-#     .privacy-container .bold { font-weight: bold; }
-#   </style>
-#   <div class="privacy-container">
-#     <div class="section"><h2>1. Data We Collect</h2><h3>Account Information</h3><ul><li>Name</li><li>Phone number</li><li>Email address</li><li>Profile image</li><li>Date of birth</li></ul><h3>Location Information</h3><ul><li>GPS coordinates</li><li>City or locality</li><li>Nearby radius</li></ul><h3>Platform Activity</h3><ul><li>Posts, comments, likes, and shares</li><li>Marketplace chats</li><li>Job applications</li></ul></div>
-#     <div class="section"><h2>2. Purpose of Data Processing</h2><p>We process user data for nearby feed ranking, emergency alerts, job discovery, fraud prevention, AI-based personalization, and analytics. All processing is under the DPDP Act, 2023.</p></div>
-#     <div class="section"><h2>3. User Rights</h2><ul><li>Right to access personal data</li><li>Right to correct inaccurate data</li><li>Right to request deletion</li><li>Right to withdraw consent</li><li>Right to grievance redressal</li></ul></div>
-#     <div class="section"><h2>4. Children's Privacy</h2><p>Users below 18 must provide verifiable parental consent. We do not engage in behavioral tracking of minors.</p></div>
-#     <div class="section"><h2>5. Data Sharing</h2><p>We may share data with cloud providers, payment partners, fraud detection systems, and legal authorities. <span class="bold">We do not sell personal user data to any third party.</span></p></div>
-#     <div class="section"><h2>6. Security Controls</h2><ul><li>Encryption at rest</li><li>Secure HTTPS transmission</li><li>Access control mechanisms</li><li>Audit logging</li><li>CERT-In aligned reporting</li></ul></div>
-#     <div class="section"><h2>7. Data Retention</h2><p>We retain personal data only for operational requirements, fraud prevention, customer support, and legal compliance. Data is securely deleted or anonymized after the retention period.</p></div>
-#     <div class="section"><h2>8. Contact Information</h2><p>For privacy or legal concerns: <a href="mailto:legal@witter24.in">legal@witter24.in</a> | <a href="mailto:privacy@witter24.in">privacy@witter24.in</a> | <a href="mailto:grievance@witter24.in">grievance@witter24.in</a></p></div>
-#     <div class="section"><h2>9. Community Guidelines</h2><ul><li>No hate speech</li><li>No scams or fraud</li><li>No stalking or harassment</li><li>No fake job postings</li><li>No false emergency alerts</li><li>No impersonation</li></ul></div>
-#   </div>
-# HTML
+PRIVACY_HTML = <<~HTML
+  <style>
+    .privacy-container { font-family: inherit; line-height: 1.7; }
+    .privacy-container h2 { margin-top: 16px; font-size: 18px; border-left: 4px solid #9333EA; padding-left: 10px; }
+    .privacy-container h3 { font-size: 15px; margin-top: 12px; font-weight: 600; }
+    .privacy-container p { margin: 10px 0; font-size: 14px; }
+    .privacy-container ul { margin: 10px 0 20px 20px; font-size: 14px; }
+    .privacy-container li { margin-bottom: 6px; }
+    .privacy-container .section { margin-bottom: 20px; }
+    .privacy-container .bold { font-weight: bold; }
+  </style>
+  <div class="privacy-container">
+    <div class="section"><h2>1. Data We Collect</h2><h3>Account Information</h3><ul><li>Name</li><li>Phone number</li><li>Email address</li><li>Profile image</li><li>Date of birth</li></ul><h3>Location Information</h3><ul><li>GPS coordinates</li><li>City or locality</li><li>Nearby radius</li></ul><h3>Platform Activity</h3><ul><li>Posts, comments, likes, and shares</li><li>Marketplace chats</li><li>Job applications</li></ul></div>
+    <div class="section"><h2>2. Purpose of Data Processing</h2><p>We process user data for nearby feed ranking, emergency alerts, job discovery, fraud prevention, AI-based personalization, and analytics. All processing is under the DPDP Act, 2023.</p></div>
+    <div class="section"><h2>3. User Rights</h2><ul><li>Right to access personal data</li><li>Right to correct inaccurate data</li><li>Right to request deletion</li><li>Right to withdraw consent</li><li>Right to grievance redressal</li></ul></div>
+    <div class="section"><h2>4. Children's Privacy</h2><p>Users below 18 must provide verifiable parental consent. We do not engage in behavioral tracking of minors.</p></div>
+    <div class="section"><h2>5. Data Sharing</h2><p>We may share data with cloud providers, payment partners, fraud detection systems, and legal authorities. <span class="bold">We do not sell personal user data to any third party.</span></p></div>
+    <div class="section"><h2>6. Security Controls</h2><ul><li>Encryption at rest</li><li>Secure HTTPS transmission</li><li>Access control mechanisms</li><li>Audit logging</li><li>CERT-In aligned reporting</li></ul></div>
+    <div class="section"><h2>7. Data Retention</h2><p>We retain personal data only for operational requirements, fraud prevention, customer support, and legal compliance. Data is securely deleted or anonymized after the retention period.</p></div>
+    <div class="section"><h2>8. Contact Information</h2><p>For privacy or legal concerns: <a href="mailto:legal@witter24.in">legal@witter24.in</a> | <a href="mailto:privacy@witter24.in">privacy@witter24.in</a> | <a href="mailto:grievance@witter24.in">grievance@witter24.in</a></p></div>
+    <div class="section"><h2>9. Community Guidelines</h2><ul><li>No hate speech</li><li>No scams or fraud</li><li>No stalking or harassment</li><li>No fake job postings</li><li>No false emergency alerts</li><li>No impersonation</li></ul></div>
+  </div>
+HTML
 
-# puts "Seeding legal content..."
+puts "Seeding legal content..."
 
-# terms = Content.find_or_initialize_by(title: "terms_and_conditions")
-# terms.subtitle = "Terms & Conditions"
-# terms.content  = TERMS_HTML.strip
-# terms.save!
+terms = Content.find_or_initialize_by(title: "terms_and_conditions")
+terms.subtitle = "Terms & Conditions"
+terms.content  = TERMS_HTML.strip
+terms.save!
 
-# privacy = Content.find_or_initialize_by(title: "privacy_policy")
-# privacy.subtitle = "Privacy Policy"
-# privacy.content  = PRIVACY_HTML.strip
-# privacy.save!
+privacy = Content.find_or_initialize_by(title: "privacy_policy")
+privacy.subtitle = "Privacy Policy"
+privacy.content  = PRIVACY_HTML.strip
+privacy.save!
 
-# puts "✓ Legal content seeded."
+puts "✓ Legal content seeded."
 
 # AdminUser.find_or_create_by!(email: 'twitter24@gmail.com') do |u|
 #   u.password = 'Twitter24'
