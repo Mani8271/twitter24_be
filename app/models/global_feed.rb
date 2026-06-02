@@ -1,10 +1,12 @@
 class GlobalFeed < ApplicationRecord
   belongs_to :user
   has_many_attached :media
-  
+
   has_many :likes, as: :likeable, dependent: :destroy
   has_many :comments, as: :commentable, dependent: :destroy
   has_many :views, as: :viewable, dependent: :destroy
+
+  before_destroy :cleanup_media
 
   validates :title, presence: true
   validates :title, length: { maximum: 100 }
@@ -54,5 +56,11 @@ class GlobalFeed < ApplicationRecord
   end
     def self.ransackable_attributes(auth_object = nil)
     ["address", "category", "created_at", "description", "disappear_after", "feed_type", "id", "id_value", "latitude", "links", "longitude", "reach_distance", "tags", "title", "updated_at", "user_id"]
+  end
+
+  private
+
+  def cleanup_media
+    media.purge_later if media.attached?
   end
 end

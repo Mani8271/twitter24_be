@@ -19,6 +19,8 @@ class Business < ApplicationRecord
 
   has_paper_trail only: [:status, :rejection_reason]
 
+  before_destroy :cleanup_media
+
   belongs_to :user
 
   has_one :business_contact, dependent: :destroy
@@ -55,7 +57,16 @@ class Business < ApplicationRecord
   def followers_count
     follows.count
   end
-  
+
+  private
+
+  def cleanup_media
+    profile_picture.purge_later if profile_picture.attached?
+    shop_images.purge_later if shop_images.attached?
+  end
+
+  public
+
   def self.ransackable_attributes(auth_object = nil)
     %w[id name category keywords status about year_established website user_id created_at updated_at]
   end

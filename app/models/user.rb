@@ -2,6 +2,8 @@ class User < ApplicationRecord
   has_secure_password
   has_one_attached :profile_picture
 
+  before_destroy :cleanup_media
+
   attribute :status, :string, default: ""
 
   default_scope { where(deleted_at: nil) }
@@ -157,6 +159,15 @@ has_one :live_location, dependent: :destroy
       errors.add(:business, "must exist for business accounts")
     end
   end
+
+  private
+
+  def cleanup_media
+    profile_picture.purge_later if profile_picture.attached?
+  end
+
+  public
+
   def self.ransackable_attributes(auth_object = nil)
     %w[id name email phone_number account_type status is_active deleted_at created_at updated_at]
   end

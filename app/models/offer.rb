@@ -2,6 +2,8 @@ class Offer < ApplicationRecord
   belongs_to :user
   has_many_attached :media
 
+  before_destroy :cleanup_media
+
   validates :title, :description, :offer_type, presence: true
   validates :title, length: { maximum: 100 }
   validates :description, length: { maximum: 5000 }
@@ -26,6 +28,10 @@ class Offer < ApplicationRecord
   end
 
   private
+
+  def cleanup_media
+    media.purge_later if media.attached?
+  end
 
   def validate_links_format
     return if links.blank?

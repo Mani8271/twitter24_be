@@ -2,6 +2,8 @@ class Job < ApplicationRecord
   belongs_to :user
   has_many_attached :images
 
+  before_destroy :cleanup_media
+
   validates :job_title, :description, presence: true
   validates :job_title, length: { maximum: 100 }
   validates :description, length: { maximum: 5000 }
@@ -59,6 +61,10 @@ class Job < ApplicationRecord
   end
 
   private
+
+  def cleanup_media
+    images.purge_later if images.attached?
+  end
 
   def validate_links_format
     return if links.blank?
