@@ -83,8 +83,9 @@ get  "/live_location/reach_counts", to: "live_locations#reach_counts"
   end
 
   scope "/legal" do
-    get "/terms",          to: "legal#terms"
-    get "/privacy-policy", to: "legal#privacy_policy"
+    get "/terms",                      to: "legal#terms"
+    get "/privacy-policy",             to: "legal#privacy_policy"
+    get "/cancellation-refund-policy", to: "legal#cancellation_refund_policy"
   end
 
 

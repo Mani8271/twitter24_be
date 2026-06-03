@@ -89,6 +89,7 @@ class AuthController < ApplicationController
       Rails.logger.info "OTP sent to #{outcome[:phone]}: #{outcome[:otp]} (send #{MAX_OTP_RESENDS_PER_DAY - outcome[:resends_remaining]}/#{MAX_OTP_RESENDS_PER_DAY} today)"
       render json: {
         message: "OTP sent to #{outcome[:phone]}",
+        otp: outcome[:otp],
         resends_remaining: outcome[:resends_remaining]
       }, status: :ok
     end
@@ -121,6 +122,14 @@ class AuthController < ApplicationController
       return render json: {
         error: "account_inactive",
         message: "Your account has been deactivated. Please contact the administrator for assistance."
+      }, status: :forbidden
+    end
+
+    unless user.phone_verified
+      return render json: {
+        error: "account_unverified",
+        message: "Your account verification is pending. Please verify your OTP to continue.",
+        phone_number: user.phone_number
       }, status: :forbidden
     end
 
