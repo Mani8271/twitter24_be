@@ -1,0 +1,13 @@
+# Cleanup schedules for media and expired posts
+# This configuration uses Rails' built-in scheduler support
+# You can also use gems like 'whenever' or 'sidekiq-scheduler' for more advanced scheduling
+
+cleanup_expired_posts:
+  cron: '0 2 * * *'  # Run daily at 2 AM
+  class: CleanupExpiredPostsJob
+  queue: default
+
+cleanup_orphaned_media:
+  cron: '0 3 * * *'  # Run daily at 3 AM (after expired posts cleanup)
+  class: CleanupOrphanedMediaJob
+  queue: default

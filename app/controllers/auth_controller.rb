@@ -6,6 +6,8 @@ class AuthController < ApplicationController
   # POST /signup
   def signup
     user = User.new(user_params)
+    # Set is_new_business_user to true for new business accounts
+    user.is_new_business_user = true if user.account_type == "business"
 
     if user.save
       render json: {
@@ -126,10 +128,16 @@ class AuthController < ApplicationController
     end
 
     unless user.phone_verified
+      # Automatically send OTP when user is unverified
+      otp_outcome = send_otp_to_user(user)
+
       return render json: {
         error: "account_unverified",
         message: "Your account verification is pending. Please verify your OTP to continue.",
-        phone_number: user.phone_number
+        phone_number: user.phone_number,
+        otp_sent: otp_outcome[:success],
+        otp_message: otp_outcome[:message],
+        resends_remaining: otp_outcome[:resends_remaining]
       }, status: :forbidden
     end
 
@@ -214,5 +222,44 @@ class AuthController < ApplicationController
       :zone_location_id,
         :account_type
     )
+  end
+
+  def send_otp_to_user(user)
+    User.transaction do
+      user.lock!
+
+      # ── 60-second cooldown between consecutive sends ───────────────────────
+      last_otp = OtpCode.where(user_id: user.id).order(created_at: :desc).first
+      if last_otp && last_otp.created_at > 60.seconds.ago
+        remaining = (60 - (Time.current - last_otp.created_at).to_i)
+        return { success: false, message: "Please wait #{remaining} seconds before requesting a new OTP.", resends_remaining: 0 }
+      end
+
+      # ── Reset 24-hour window if it has expired ────────────────────────────
+      if user.otp_resend_window_start.nil? || user.otp_resend_window_start < 24.hours.ago
+        user.update_columns(otp_resend_count: 0, otp_resend_window_start: Time.current)
+      end
+
+      # ── Daily limit ────────────────────────────────────────────────────────
+      if user.otp_resend_count >= MAX_OTP_RESENDS_PER_DAY
+        window_resets_at = user.otp_resend_window_start + 24.hours
+        hours_left = ((window_resets_at - Time.current) / 3600).ceil
+        return { success: false, message: "You have reached the maximum resend limit. Please try again after 24 hours.", resends_remaining: 0 }
+      end
+
+      otp = user.generate_otp
+      user.increment!(:otp_resend_count)
+
+      Rails.logger.info "OTP auto-sent during signin for #{user.phone_number}: #{otp}"
+      return {
+        success: true,
+        message: "OTP sent to your phone number",
+        otp: otp,
+        resends_remaining: MAX_OTP_RESENDS_PER_DAY - user.otp_resend_count
+      }
+    end
+  rescue StandardError => e
+    Rails.logger.error "Error sending OTP to user #{user.id}: #{e.message}"
+    { success: false, message: "Error sending OTP. Please try again.", resends_remaining: 0 }
   end
 end

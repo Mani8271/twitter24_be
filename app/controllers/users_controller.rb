@@ -11,6 +11,7 @@ class UsersController < ApplicationController
     if current_user.update(user_params)
       begin
         attach_profile_picture
+        delete_profile_picture if params[:delete_profile_picture].present?
       rescue ArgumentError => e
         return render json: { errors: [e.message] }, status: :unprocessable_entity
       end
@@ -82,5 +83,9 @@ class UsersController < ApplicationController
     end
 
     current_user.profile_picture.attach(file)
+  end
+
+  def delete_profile_picture
+    current_user.profile_picture.purge if current_user.profile_picture.attached?
   end
 end

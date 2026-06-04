@@ -29,3 +29,17 @@
 
 en:
   hello: "Hello world"
+
+  # Date and Time Formats
+  time:
+    formats:
+      default: "%d %b %Y, %I:%M %p"
+      long: "%d %B %Y, %I:%M %p IST"
+      short: "%d %b, %I:%M %p"
+
+  date:
+    formats:
+      default: "%d %b %Y"
+      long: "%d %B %Y"
+      short: "%d %b"
+      day_month_year: "%d/%m/%Y"

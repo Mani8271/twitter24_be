@@ -27,6 +27,9 @@ class UserSerializer < ActiveModel::Serializer
   attribute :onboarding_completed, if: :business_account?
   attribute :current_step, if: :business_account?
   attribute :steps_completed, if: :business_account?
+  attribute :business, if: :business_account?
+  attribute :business_name, if: :business_account?
+  attribute :business_profile_picture, if: :business_account?
 
   has_many :followed_businesses   
 
@@ -78,6 +81,27 @@ class UserSerializer < ActiveModel::Serializer
 
   def followed_businesses_count
     object.followed_businesses.count
+  end
+
+  # ─── Business Object ──────────────────────────────────────────────────
+  def business
+    return nil unless object.business
+    {
+      id: object.business.id,
+      name: object.business.name,
+      category: object.business.category,
+      profile_picture: business_profile_picture,
+      status: object.business.status
+    }
+  end
+
+  def business_name
+    object.business&.name
+  end
+
+  def business_profile_picture
+    return nil unless object.business&.profile_picture&.attached?
+    attachment_url(object.business.profile_picture)
   end
 
   # ─── Billing Address ───────────────────────────────────────────────────
