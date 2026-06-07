@@ -154,6 +154,8 @@ has_one :live_location, dependent: :destroy
     # Skip during the upgrade flow — the admin creates the business record
     # immediately after changing account_type, so the momentary gap is fine.
     return if account_type_changed? && account_type == "business"
+    # Skip for new business users who haven't completed onboarding step 1 yet
+    return if is_new_business_user
 
     if account_type == "business" && business.nil?
       errors.add(:business, "must exist for business accounts")
