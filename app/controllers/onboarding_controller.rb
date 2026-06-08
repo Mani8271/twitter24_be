@@ -33,8 +33,6 @@ class OnboardingController < ApplicationController
 
     if business.update(step1_params)
       mark_step_done(1)
-      # Mark user as no longer a new business user on step 1 completion
-      current_user.update(is_new_business_user: false) if current_user.account_type == "business"
       render json: { message: "Successfully saved details", progress: progress }, status: :ok
     else
       render json: { errors: business.errors.full_messages }, status: :unprocessable_entity
@@ -176,6 +174,7 @@ class OnboardingController < ApplicationController
       end
 
       mark_step_done(6)
+      business.update(status: "submitted")
       render json: { message: "Successfully saved details", progress: progress }, status: :ok
     end
   end
