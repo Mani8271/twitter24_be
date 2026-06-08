@@ -167,7 +167,7 @@ class AuthController < ApplicationController
       if otp_record.otp_expiry < Time.current
         return render json: { error: "OTP expired" }, status: :unauthorized
       end
-        user.update(phone_verified: true)
+      user.update_column(:phone_verified, true)
       token = JsonWebToken.encode({ user_id: user.id, token_version: user.token_version })
       exp_formatted = (Time.now + 365.days).strftime("%m-%d-%Y %H:%M")
 

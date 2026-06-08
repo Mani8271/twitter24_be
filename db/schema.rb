@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_30_000003) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_02_131000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -284,6 +284,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_30_000003) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "valid_from"
     t.index ["latitude", "longitude"], name: "index_offers_on_latitude_and_longitude"
     t.index ["offer_type"], name: "index_offers_on_offer_type"
     t.index ["user_id"], name: "index_offers_on_user_id"
@@ -398,6 +399,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_30_000003) do
     t.datetime "subscription_expires_at"
     t.jsonb "subscription_usage", default: {}, null: false
     t.integer "token_version", default: 0, null: false
+    t.boolean "is_new_business_user", default: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["phone_number"], name: "index_users_on_phone_number", unique: true

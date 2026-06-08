@@ -139,6 +139,7 @@ has_one :live_location, dependent: :destroy
 
 
   def generate_otp
+    OtpCode.where(user_id: id).update_all(otp_expiry: Time.current)
     
     otp = rand(100000..999999).to_s
 
