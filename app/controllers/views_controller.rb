@@ -3,7 +3,11 @@ class ViewsController < ApplicationController
 
   def create
     viewable = find_viewable
-    viewable.views.find_or_create_by!(user: current_user)
+    
+    unless viewable.respond_to?(:user_id) && viewable.user_id == current_user.id
+      viewable.views.find_or_create_by!(user: current_user)
+    end
+    
     head :ok
   end
 

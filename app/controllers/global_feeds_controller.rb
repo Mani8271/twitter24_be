@@ -241,7 +241,7 @@ class GlobalFeedsController < ApplicationController
 
     # user_id param → return that user's posts directly
     if params[:user_id].present?
-      feeds = GlobalFeed.where(user_id: params[:user_id]).order(created_at: :desc)
+      feeds = GlobalFeed.active.where(user_id: params[:user_id]).order(created_at: :desc)
       feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
       total = feeds.count
       feeds = feeds.offset((page - 1) * per_page).limit(per_page).includes(FEED_INCLUDES)
@@ -254,7 +254,7 @@ class GlobalFeedsController < ApplicationController
 
     # scope=my → directly return current user's posts, skip all filters
     if params[:scope] == "my"
-      feeds = GlobalFeed.where(user_id: current_user.id).order(created_at: :desc)
+      feeds = GlobalFeed.active.where(user_id: current_user.id).order(created_at: :desc)
       feeds = feeds.where(feed_type: params[:type]) if params[:type].present?
       if params[:q].present?
         like = "%#{params[:q].downcase}%"
@@ -272,7 +272,7 @@ class GlobalFeedsController < ApplicationController
       }
     end
 
-    feeds = GlobalFeed.from_active_users.where.not(user_id: current_user.id).order(created_at: :desc)
+    feeds = GlobalFeed.active.from_active_users.where.not(user_id: current_user.id).order(created_at: :desc)
 
     # 1) TYPE filter (global/local)
     if params[:type].present?

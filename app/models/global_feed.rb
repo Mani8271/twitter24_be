@@ -16,6 +16,13 @@ class GlobalFeed < ApplicationRecord
   # Exclude posts from soft-deleted users in public listings
   scope :from_active_users, -> { joins(:user).where(users: { deleted_at: nil }) }
 
+  scope :active, -> {
+    where(
+      "global_feeds.disappear_after IS NULL OR global_feeds.created_at + (global_feeds.disappear_after || ' days')::interval > ?",
+      Time.current
+    )
+  }
+
   validates :feed_type, inclusion: { in: %w[global local] }
 
   validates :latitude, :longitude, :reach_distance,

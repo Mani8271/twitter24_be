@@ -38,6 +38,7 @@ class OfferSerializer < ActiveModel::Serializer
       id:              biz.id,
       name:            biz.name,
       category:        biz.category,
+      address:         biz.business_location&.map_address || biz.business_location&.city,
       profile_picture: biz.profile_picture.attached? ? biz.profile_picture.blob.url(expires_in: 7.days) : nil
     }
   rescue

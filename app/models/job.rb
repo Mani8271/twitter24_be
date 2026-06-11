@@ -17,8 +17,8 @@ class Job < ApplicationRecord
 
   scope :active, -> {
     where(
-      "disappearing_days IS NULL OR created_at >= ?",
-      Time.current - (Arel.sql("disappearing_days || ' days'"))
+      "jobs.disappearing_days IS NULL OR jobs.created_at >= ?",
+      Time.current - (Arel.sql("jobs.disappearing_days || ' days'"))
     )
   }
   scope :by_type,       ->(type)  { where(job_type: type) if type.present? }

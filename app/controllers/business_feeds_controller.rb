@@ -7,6 +7,7 @@ class BusinessFeedsController < ApplicationController
     case params[:type]
     when "local", "global"
       feeds = business.global_feeds
+                      .active
                       .where(feed_type: params[:type])
                       .order(created_at: :desc)
 
@@ -15,40 +16,19 @@ class BusinessFeedsController < ApplicationController
              scope: current_user
 
     when "jobs"
-      jobs = business.jobs.order(created_at: :desc)
-      render json: jobs.map { |job| job_response(job) }
+      jobs = business.jobs.active.order(created_at: :desc)
+      render json: jobs,
+             each_serializer: JobSerializer,
+             scope: current_user
 
     when "offers"
-      offers = business.offers.order(created_at: :desc)
-      render json: offers.map { |offer| offer_response(offer) }
+      offers = business.offers.active.order(created_at: :desc)
+      render json: offers,
+             each_serializer: OfferSerializer,
+             scope: current_user
 
     else
       render json: { error: "Invalid type" }, status: :bad_request
     end
-  end
-
-  private
-
-  # ===========================
-  # TEMP RESPONSES (non-feed)
-  # ===========================
-  def job_response(job)
-    {
-      id: job.id,
-      title: job.title,
-      company: job.company_name,
-      location: job.location,
-      created_at: job.created_at
-    }
-  end
-
-  def offer_response(offer)
-    {
-      id: offer.id,
-      title: offer.title,
-      discount: offer.discount,
-      valid_till: offer.valid_till,
-      created_at: offer.created_at
-    }
   end
 end

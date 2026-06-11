@@ -15,7 +15,7 @@ class Offer < ApplicationRecord
   validate :validate_links_format
   validate :location_required_for_local
 
-  scope :active, -> { where("valid_till IS NULL OR valid_till >= ?", Time.current) }
+  scope :active, -> { where("offers.valid_till IS NULL OR offers.valid_till >= ?", Time.current) }
   scope :by_type, ->(type) { where(offer_type: type) if type.present? }
 
   def self.ransackable_attributes(auth_object = nil)
