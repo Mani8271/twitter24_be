@@ -243,11 +243,9 @@ end
 
 
    def get_step1
-    business_data = current_user.business&.slice(
+    render json: current_user.business&.slice(
       :name, :category, :year_established, :website, :about, :products_services
-    ) || {}
-    categories = Category.where(is_active: true).order(priority: :asc, name: :asc)
-    render json: business_data.merge(available_categories: categories)
+    )
   end
 
   # GET /onboarding/step2

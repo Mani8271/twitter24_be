@@ -271,7 +271,7 @@ ActiveAdmin.register Business do
           div style: "display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;" do
             # Image thumbnail
             div style: "flex-shrink:0;border-radius:14px;overflow:hidden;border:3px solid #818cf8;width:180px;background:#f1f5f9;" do
-                          a href: url_for(resource.profile_picture), target: "_blank", rel: "noopener noreferrer", style: "display:block;" do
+              a href: url_for(resource.profile_picture), target: "_blank", rel: "noopener noreferrer", style: "display:block;" do
                 img src: url_for(resource.profile_picture), alt: "Profile Picture", style: "width:180px;height:180px;object-fit:cover;display:block;"
               end
               div style: "padding:8px 12px;background:#f8fafc;border-top:1px solid #e2e8f0;" do
@@ -322,7 +322,7 @@ ActiveAdmin.register Business do
           div style: "display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px;" do
             shop_images.each_with_index do |img, i|
               div style: "border-radius:12px;overflow:hidden;border:2px solid #e2e8f0;background:#f8fafc;" do
-                              a href: url_for(img), target: "_blank", rel: "noopener noreferrer", title: "Click to view #{img.blob.filename} at full size", style: "display:block;" do
+                a href: url_for(img), target: "_blank", rel: "noopener noreferrer", title: "Click to view #{img.blob.filename} at full size", style: "display:block;" do
                   img src: url_for(img), alt: "Shop Image #{i + 1}", style: "width:100%;height:155px;object-fit:cover;display:block;"
                 end
                 div style: "padding:8px 10px;background:#f8fafc;border-top:1px solid #e2e8f0;" do
@@ -363,3 +363,4 @@ ActiveAdmin.register Business do
     f.actions
   end
 end
+

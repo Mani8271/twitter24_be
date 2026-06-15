@@ -356,3 +356,45 @@
 # # # end
 
 # # # puts "✓ 50 local feeds seeded."
+# ─── Dynamic Categories Seeding ────────────────────────────────────────────────
+categories_data = [
+  { priority: 1, name: 'Emergency Services', emoji: '🚨', is_active: true },
+  { priority: 2, name: 'Food & Dining', emoji: '🍽️', is_active: true },
+  { priority: 3, name: 'Healthcare', emoji: '🏥', is_active: true },
+  { priority: 4, name: 'Daily Needs', emoji: '🛒', is_active: true },
+  { priority: 5, name: 'Home Services', emoji: '🏠', is_active: true },
+  { priority: 6, name: 'Public Services', emoji: '🏛️', is_active: true },
+  { priority: 8, name: 'Real Estate', emoji: '🏘️', is_active: true },
+  { priority: 9, name: 'Transportation & Travel', emoji: '🚗', is_active: true },
+  { priority: 10, name: 'Events & Venues', emoji: '🎉', is_active: true },
+  { priority: 11, name: 'Education', emoji: '🎓', is_active: true },
+  { priority: 12, name: 'Learning & Skills', emoji: '📚', is_active: true },
+  { priority: 13, name: 'Tech Services', emoji: '💻', is_active: true },
+  { priority: 14, name: 'Local Marketplace', emoji: '🛍️', is_active: true },
+  { priority: 15, name: 'Sports & Fitness', emoji: '🏋️', is_active: true },
+  { priority: 16, name: 'Beauty & Personal Care', emoji: '💄', is_active: true },
+  { priority: 17, name: 'Fashion', emoji: '👕', is_active: true },
+  { priority: 18, name: 'Tailors & Designers', emoji: '✂️', is_active: true },
+  { priority: 19, name: 'Nutrition & Wellness', emoji: '🥗', is_active: true },
+  { priority: 20, name: 'Pet Care', emoji: '🐾', is_active: true },
+  { priority: 21, name: 'Experts & Consultants', emoji: '👨💼', is_active: true },
+  { priority: 22, name: 'Hotels & Resorts', emoji: '🏨', is_active: true },
+  { priority: 23, name: 'Cloud Kitchens', emoji: '🍲', is_active: true },
+  { priority: 24, name: 'Snack Spots & Street Food', emoji: '🌮', is_active: true },
+  { priority: 25, name: 'Franchise Opportunities', emoji: '🤝', is_active: true },
+  { priority: 26, name: 'Tourism & Explore', emoji: '🧭', is_active: true },
+  { priority: 27, name: 'Heritage & Culture', emoji: '🏺', is_active: true },
+  { priority: 28, name: 'Religious Places', emoji: '🛕', is_active: true },
+  { priority: 29, name: 'Government & Political Offices', emoji: '🏢', is_active: true },
+  { priority: 30, name: 'Local Community Groups', emoji: '👥', is_active: true }
+]
+
+categories_data.each do |cat|
+  Category.find_or_create_by!(name: cat[:name]) do |category|
+    category.priority = cat[:priority]
+    category.emoji = cat[:emoji]
+    category.is_active = cat[:is_active]
+  end
+end
+
+puts "Seeded \#{Category.count} categories!"
