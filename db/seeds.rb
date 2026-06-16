@@ -357,6 +357,8 @@
 
 # # # puts "✓ 50 local feeds seeded."
 # ─── Dynamic Categories Seeding ────────────────────────────────────────────────
+
+
 categories_data = [
   { priority: 1, name: 'Emergency Services', emoji: '🚨', is_active: true },
   { priority: 2, name: 'Food & Dining', emoji: '🍽️', is_active: true },
