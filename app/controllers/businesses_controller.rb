@@ -76,17 +76,36 @@ def update
 end
 
 # =========================================================
-# 🔗 RELATED BUSINESSES
+# 🔗 RELATED BUSINESSES (WITH LOCATION-BASED FILTERING)
 # GET /businesses/:id/related
 # =========================================================
 def related
   current_user.live_locations.load
 
   business = Business.includes(:business_location).find(params[:id])
+  business_loc = business.business_location
 
-  # Collect same-category businesses (excluding the viewed business and current user's own)
+  # Return empty if business has no location
+  return render json: [] unless business_loc&.latitude && business_loc&.longitude
+
+  # Get user's live location for distance calculation
+  user_loc = current_user.live_locations.loaded? ?
+             current_user.live_locations.detect(&:live_location_default) :
+             current_user.live_locations.find_by(live_location_default: true)
+
+  user_lat = user_loc&.latitude
+  user_lng = user_loc&.longitude
+
   excluded_ids = [business.id]
+  result_ids = Set.new
+  final_results = []
 
+  # Helper to calculate distance
+  calc_distance = lambda do |lat1, lng1, lat2, lng2|
+    Geocoder::Calculations.distance_between([lat1, lng1], [lat2, lng2])
+  end
+
+  # STEP 1: Same-category businesses within 25km (sorted by distance)
   same_cat = Business
                .includes(:business_location, :business_hours, :business_contact,
                          profile_picture_attachment: :blob)
@@ -94,26 +113,55 @@ def related
                .where(category: business.category)
                .where.not(id: excluded_ids)
                .where.not(user_id: current_user.id)
-               .limit(6)
+               .joins(:business_location)
 
-  results = same_cat.to_a
+  same_cat_with_distance = []
+  same_cat.each do |biz|
+    loc = biz.business_location
+    next unless loc&.latitude && loc&.longitude
 
-  # If fewer than 3, fill with businesses from other categories
-  if results.size < 3
-    other = Business
-              .includes(:business_location, :business_hours, :business_contact,
-                        profile_picture_attachment: :blob)
-              .where(status: "approved")
-              .where.not(id: excluded_ids + results.map(&:id))
-              .where.not(user_id: current_user.id)
-              .where.not(category: business.category)
-              .limit(6 - results.size)
-    results += other.to_a
+    distance = calc_distance.call(business_loc.latitude, business_loc.longitude, loc.latitude, loc.longitude)
+    same_cat_with_distance << { biz: biz, distance: distance } if distance <= 25
   end
 
-  render json: results,
+  same_cat_with_distance.sort_by! { |item| item[:distance] }
+  same_cat_with_distance.take(6).each do |item|
+    final_results << item[:biz]
+    result_ids << item[:biz].id
+  end
+
+  # STEP 2: Other-category businesses within 50km (only if we need more results)
+  if final_results.size < 6
+    other_cat = Business
+                 .includes(:business_location, :business_hours, :business_contact,
+                           profile_picture_attachment: :blob)
+                 .where(status: "approved")
+                 .where.not(id: excluded_ids + result_ids.to_a)
+                 .where.not(user_id: current_user.id)
+                 .where.not(category: business.category)
+                 .joins(:business_location)
+
+    other_cat_with_distance = []
+    other_cat.each do |biz|
+      loc = biz.business_location
+      next unless loc&.latitude && loc&.longitude
+
+      distance = calc_distance.call(business_loc.latitude, business_loc.longitude, loc.latitude, loc.longitude)
+      other_cat_with_distance << { biz: biz, distance: distance } if distance <= 50
+    end
+
+    other_cat_with_distance.sort_by! { |item| item[:distance] }
+    other_cat_with_distance.take(6 - final_results.size).each do |item|
+      final_results << item[:biz]
+      result_ids << item[:biz].id
+    end
+  end
+
+  render json: final_results,
          each_serializer: BusinessSerializer,
-         scope: current_user
+         scope: current_user,
+         user_lat: user_lat,
+         user_lng: user_lng
 end
 
 
