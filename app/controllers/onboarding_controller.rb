@@ -1,5 +1,6 @@
 class OnboardingController < ApplicationController
   include PlanAuthorized
+  include MediaReplacement
 
   # Helpers
   def business
@@ -59,9 +60,26 @@ class OnboardingController < ApplicationController
   def step3_location
     location = business.business_location || business.build_business_location
 
+    # Check if address cooldown is active (only for existing locations)
+    if location.persisted? && location.address_cooldown_active?
+      return render json: {
+        error: location.cooldown_message,
+        error_code: "ADDRESS_COOLDOWN_ACTIVE",
+        next_address_update_date: location.next_address_update_date&.strftime("%d %B %Y"),
+        days_until_update: location.days_until_next_address_update,
+        location: location,
+        serializer: BusinessLocationSerializer
+      }, status: :unprocessable_entity
+    end
+
     if location.update(step3_params)
       mark_step_done(3)
-      render json: { message: "Successfully saved details", progress: progress }, status: :ok
+      render json: {
+        message: "Successfully saved details",
+        progress: progress,
+        location: location,
+        serializer: BusinessLocationSerializer
+      }, status: :ok
     else
       render json: { errors: location.errors.full_messages }, status: :unprocessable_entity
     end
@@ -116,66 +134,67 @@ class OnboardingController < ApplicationController
   # profile_picture: file
   # shop_images[]: files
   def step6_images
-    # profile picture optional — validate before attaching
-    if params[:profile_picture].present?
-      begin
+    begin
+      # ✅ PROFILE PICTURE - Safe replacement with old file cleanup
+      if params[:profile_picture].present?
         validate_upload!(params[:profile_picture])
-      rescue ArgumentError => e
-        return render json: { error: e.message }, status: :unprocessable_entity
+        replace_media(business, :profile_picture, params[:profile_picture])
       end
-      business.profile_picture.attach(params[:profile_picture])
-    end
 
-    # gallery images — validate each file
-    if params[:shop_images].present?
-      Array.wrap(params[:shop_images]).each do |img|
-        begin
+      # ✅ GALLERY IMAGES - Safe handling with proper cleanup
+      if params[:shop_images].present?
+        Array.wrap(params[:shop_images]).each do |img|
           validate_upload!(img)
-        rescue ArgumentError => e
-          return render json: { error: e.message }, status: :unprocessable_entity
         end
-      end
-    end
 
-    # Subscription plan limits apply only when managing an already-completed domain (My Domain page).
-    # During initial onboarding the user has no subscription yet, so checks are skipped.
-    if params[:shop_images].present?
-      if progress.completed
-        return unless require_feature!("domain_uploads")
+        # Subscription plan limits apply only when managing an already-completed domain (My Domain page).
+        # During initial onboarding the user has no subscription yet, so checks are skipped.
+        if progress.completed
+          return unless require_feature!("domain_uploads")
 
-        limit = current_user.feature_limit("domain_uploads")
-        if limit
-          new_count     = Array.wrap(params[:shop_images]).length
-          current_count = business.shop_images.count
-          if current_count + new_count > limit
-            return render json: {
-              error:            "Uploading #{new_count} image(s) would exceed your plan limit of #{limit}. " \
-                                "You currently have #{current_count} image(s).",
-              feature_key:      "domain_uploads",
-              limit_reached:    true,
-              limit:            limit,
-              current_count:    current_count,
-              upgrade_required: true
-            }, status: :forbidden
+          limit = current_user.feature_limit("domain_uploads")
+          if limit
+            new_count     = Array.wrap(params[:shop_images]).length
+            current_count = business.shop_images.count
+            if current_count + new_count > limit
+              return render json: {
+                error:            "Uploading #{new_count} image(s) would exceed your plan limit of #{limit}. " \
+                                  "You currently have #{current_count} image(s).",
+                feature_key:      "domain_uploads",
+                limit_reached:    true,
+                limit:            limit,
+                current_count:    current_count,
+                upgrade_required: true
+              }, status: :forbidden
+            end
           end
+
+          # In edit mode, append images (don't delete old ones)
+          replace_media_collection(business, :shop_images, params[:shop_images], delete_existing: false)
+        else
+          # In onboarding mode, append images (building up the collection)
+          business.shop_images.attach(params[:shop_images])
         end
       end
 
-      business.shop_images.attach(params[:shop_images])
-    end
+      if progress.completed
+        # Edit mode (My Domain page) — no minimum count, no step marking, no admin re-notification
+        render json: { message: "Gallery updated successfully" }, status: :ok
+      else
+        # Initial onboarding — enforce the 3-image minimum
+        if business.shop_images.count < 3
+          return render json: { error: "Please upload at least 3 shop images." }, status: :bad_request
+        end
 
-    if progress.completed
-      # Edit mode (My Domain page) — no minimum count, no step marking, no admin re-notification
-      render json: { message: "Gallery updated successfully" }, status: :ok
-    else
-      # Initial onboarding — enforce the 3-image minimum
-      if business.shop_images.count < 3
-        return render json: { error: "Please upload at least 3 shop images." }, status: :bad_request
+        mark_step_done(6)
+        business.update(status: "submitted")
+        render json: { message: "Successfully saved details", progress: progress }, status: :ok
       end
-
-      mark_step_done(6)
-      business.update(status: "submitted")
-      render json: { message: "Successfully saved details", progress: progress }, status: :ok
+    rescue ArgumentError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error("Step6 Images Error: #{e.message}")
+      render json: { error: "Failed to upload images" }, status: :unprocessable_entity
     end
   end
 
@@ -224,22 +243,34 @@ class OnboardingController < ApplicationController
   # GET /onboarding/status
  
   def status
-  render json: {
-    business: business.as_json(except: [:created_at, :updated_at]).merge(
-      contact_info: business.business_contact.as_json(except: [:created_at, :updated_at]),
-      location: business.business_location.as_json(except: [:created_at, :updated_at]),
-      business_hours: business.business_hours.as_json(except: [:created_at, :updated_at]),
-      documents: business.business_document.as_json(except: [:created_at, :updated_at]),
-      images: {
-        profile_picture: business.profile_picture.attached? ? attachment_url(business.profile_picture) : nil,
-        shop_images: business.shop_images.map { |img| img.blob.url(expires_in: 7.days) }
-      }
-    ),
-    steps_completed: progress.steps_completed,
-    current_step: progress.current_step,
-    completed: progress.completed
-  }, status: :ok
-end
+    location_data = business.business_location&.as_json(except: [:created_at, :updated_at]) || {}
+
+    # Add cooldown information if location exists
+    if business.business_location
+      location_data.merge!(
+        address_cooldown_active: business.business_location.address_cooldown_active?,
+        next_address_update_date: business.business_location.next_address_update_date&.strftime("%d %B %Y"),
+        days_until_next_address_update: business.business_location.days_until_next_address_update,
+        cooldown_message: business.business_location.cooldown_message
+      )
+    end
+
+    render json: {
+      business: business.as_json(except: [:created_at, :updated_at]).merge(
+        contact_info: business.business_contact.as_json(except: [:created_at, :updated_at]),
+        location: location_data,
+        business_hours: business.business_hours.as_json(except: [:created_at, :updated_at]),
+        documents: business.business_document.as_json(except: [:created_at, :updated_at]),
+        images: {
+          profile_picture: business.profile_picture.attached? ? attachment_url(business.profile_picture) : nil,
+          shop_images: business.shop_images.map { |img| img.blob.url(expires_in: 7.days) }
+        }
+      ),
+      steps_completed: progress.steps_completed,
+      current_step: progress.current_step,
+      completed: progress.completed
+    }, status: :ok
+  end
 
 
    def get_step1
@@ -257,7 +288,19 @@ end
 
   # GET /onboarding/step3
   def get_step3
-    render json: current_user.business&.business_location
+    location = current_user.business&.business_location
+
+    if location
+      render json: {
+        **location.as_json,
+        address_cooldown_active: location.address_cooldown_active?,
+        next_address_update_date: location.next_address_update_date&.strftime("%d %B %Y"),
+        days_until_next_address_update: location.days_until_next_address_update,
+        cooldown_message: location.cooldown_message
+      }
+    else
+      render json: {}
+    end
   end
 
   # GET /onboarding/step4

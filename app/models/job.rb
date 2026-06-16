@@ -63,7 +63,11 @@ class Job < ApplicationRecord
   private
 
   def cleanup_media
-    images.purge_later if images.attached?
+    # Direct deletion from S3 when job is destroyed
+    if images.attached?
+      images.purge
+      Rails.logger.info("Job #{id}: Deleted #{images.count} images from S3")
+    end
   end
 
   def validate_links_format

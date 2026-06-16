@@ -166,7 +166,11 @@ has_one :live_location, dependent: :destroy
   private
 
   def cleanup_media
-    profile_picture.purge_later if profile_picture.attached?
+    # Direct deletion from S3 when user is destroyed
+    if profile_picture.attached?
+      profile_picture.purge
+      Rails.logger.info("User #{id}: Deleted profile picture from S3")
+    end
   end
 
   public

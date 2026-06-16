@@ -79,89 +79,155 @@ end
 # 🔗 RELATED BUSINESSES (WITH LOCATION-BASED FILTERING)
 # GET /businesses/:id/related
 # =========================================================
+# Returns nearby approved businesses filtered by:
+# - Geographic proximity (Haversine distance)
+# - Approval status (only "approved" businesses)
+# - Category relevance (same category first, then others)
+# - Exclusions: current business, user's own businesses
+# - Sorted by: distance (nearest first), then category relevance, then popularity
+#
+# Query parameters:
+#   - lat (optional): User's current latitude (for distance calculation)
+#   - lng (optional): User's current longitude (for distance calculation)
+#   - limit (optional): Max results to return (default: 6)
+# =========================================================
 def related
+  # Pre-load user's live locations for efficient access
   current_user.live_locations.load
 
+  # Load the business being viewed and its location
   business = Business.includes(:business_location).find(params[:id])
   business_loc = business.business_location
 
-  # Return empty if business has no location
+  # Return empty array if the business has no location data
   return render json: [] unless business_loc&.latitude && business_loc&.longitude
 
-  # Get user's live location for distance calculation
-  user_loc = current_user.live_locations.loaded? ?
-             current_user.live_locations.detect(&:live_location_default) :
-             current_user.live_locations.find_by(live_location_default: true)
+  # Determine distance calculation starting point: prefer client coords, then DB coords
+  reference_lat = params[:lat]&.to_f
+  reference_lng = params[:lng]&.to_f
 
-  user_lat = user_loc&.latitude
-  user_lng = user_loc&.longitude
+  unless reference_lat && reference_lng
+    user_loc = current_user.live_locations.loaded? ?
+               current_user.live_locations.detect(&:live_location_default) :
+               current_user.live_locations.find_by(live_location_default: true)
+    reference_lat = user_loc&.latitude
+    reference_lng = user_loc&.longitude
+  end
+
+  # Configuration for radius filtering (in kilometers)
+  same_category_radius = ENV.fetch("RELATED_BUSINESSES_SAME_CAT_RADIUS_KM", "25").to_f
+  other_category_radius = ENV.fetch("RELATED_BUSINESSES_OTHER_CAT_RADIUS_KM", "50").to_f
+  max_results = params[:limit].to_i.positive? ? params[:limit].to_i : 6
 
   excluded_ids = [business.id]
   result_ids = Set.new
   final_results = []
 
-  # Helper to calculate distance
+  # Helper lambda to calculate Haversine distance between two points
   calc_distance = lambda do |lat1, lng1, lat2, lng2|
+    next nil unless lat1 && lng1 && lat2 && lng2
     Geocoder::Calculations.distance_between([lat1, lng1], [lat2, lng2])
   end
 
-  # STEP 1: Same-category businesses within 25km (sorted by distance)
-  same_cat = Business
-               .includes(:business_location, :business_hours, :business_contact,
-                         profile_picture_attachment: :blob)
-               .where(status: "approved")
-               .where(category: business.category)
-               .where.not(id: excluded_ids)
-               .where.not(user_id: current_user.id)
-               .joins(:business_location)
+  # =========================================================
+  # STEP 1: Same-category approved businesses within radius
+  # =========================================================
+  same_cat_candidates = Business
+    .includes(:business_location, :business_hours, :business_contact,
+              profile_picture_attachment: :blob)
+    .where(status: "approved")
+    .where(category: business.category)
+    .where.not(id: excluded_ids)
+    .where.not(user_id: current_user.id)
+    .joins(:business_location)
 
   same_cat_with_distance = []
-  same_cat.each do |biz|
-    loc = biz.business_location
-    next unless loc&.latitude && loc&.longitude
+  same_cat_candidates.each do |candidate|
+    candidate_loc = candidate.business_location
+    # Skip if candidate has missing/invalid coordinates
+    next unless candidate_loc&.latitude && candidate_loc&.longitude
 
-    distance = calc_distance.call(business_loc.latitude, business_loc.longitude, loc.latitude, loc.longitude)
-    same_cat_with_distance << { biz: biz, distance: distance } if distance <= 25
+    # Calculate distance from the viewed business to candidate
+    distance = calc_distance.call(
+      business_loc.latitude, business_loc.longitude,
+      candidate_loc.latitude, candidate_loc.longitude
+    )
+
+    # Include if within same-category radius
+    if distance && distance <= same_category_radius
+      same_cat_with_distance << {
+        biz: candidate,
+        distance: distance,
+        popularity: candidate.follows.count
+      }
+    end
   end
 
-  same_cat_with_distance.sort_by! { |item| item[:distance] }
-  same_cat_with_distance.take(6).each do |item|
+  # Sort by: distance (nearest first), then popularity (most followed first)
+  same_cat_with_distance.sort_by! { |item| [item[:distance], -item[:popularity]] }
+
+  # Take up to max_results from same category
+  same_cat_with_distance.take(max_results).each do |item|
     final_results << item[:biz]
     result_ids << item[:biz].id
   end
 
-  # STEP 2: Other-category businesses within 50km (only if we need more results)
-  if final_results.size < 6
-    other_cat = Business
-                 .includes(:business_location, :business_hours, :business_contact,
-                           profile_picture_attachment: :blob)
-                 .where(status: "approved")
-                 .where.not(id: excluded_ids + result_ids.to_a)
-                 .where.not(user_id: current_user.id)
-                 .where.not(category: business.category)
-                 .joins(:business_location)
+  # =========================================================
+  # STEP 2: Other-category approved businesses within radius
+  # =========================================================
+  # Only query if we need more results
+  if final_results.size < max_results
+    remaining_slots = max_results - final_results.size
+
+    other_cat_candidates = Business
+      .includes(:business_location, :business_hours, :business_contact,
+                profile_picture_attachment: :blob)
+      .where(status: "approved")
+      .where.not(id: excluded_ids + result_ids.to_a)
+      .where.not(user_id: current_user.id)
+      .where.not(category: business.category)
+      .joins(:business_location)
 
     other_cat_with_distance = []
-    other_cat.each do |biz|
-      loc = biz.business_location
-      next unless loc&.latitude && loc&.longitude
+    other_cat_candidates.each do |candidate|
+      candidate_loc = candidate.business_location
+      # Skip if candidate has missing/invalid coordinates
+      next unless candidate_loc&.latitude && candidate_loc&.longitude
 
-      distance = calc_distance.call(business_loc.latitude, business_loc.longitude, loc.latitude, loc.longitude)
-      other_cat_with_distance << { biz: biz, distance: distance } if distance <= 50
+      # Calculate distance from the viewed business to candidate
+      distance = calc_distance.call(
+        business_loc.latitude, business_loc.longitude,
+        candidate_loc.latitude, candidate_loc.longitude
+      )
+
+      # Include if within other-category radius
+      if distance && distance <= other_category_radius
+        other_cat_with_distance << {
+          biz: candidate,
+          distance: distance,
+          popularity: candidate.follows.count
+        }
+      end
     end
 
-    other_cat_with_distance.sort_by! { |item| item[:distance] }
-    other_cat_with_distance.take(6 - final_results.size).each do |item|
+    # Sort by: distance (nearest first), then popularity (most followed first)
+    other_cat_with_distance.sort_by! { |item| [item[:distance], -item[:popularity]] }
+
+    # Take only what we need to reach max_results
+    other_cat_with_distance.take(remaining_slots).each do |item|
       final_results << item[:biz]
       result_ids << item[:biz].id
     end
   end
 
+  # =========================================================
+  # RESPONSE
+  # =========================================================
   render json: final_results,
          each_serializer: BusinessSerializer,
          scope: current_user,
-         user_lat: user_lat,
-         user_lng: user_lng
+         user_lat: reference_lat,
+         user_lng: reference_lng
 end
 
 

@@ -30,7 +30,11 @@ class Offer < ApplicationRecord
   private
 
   def cleanup_media
-    media.purge_later if media.attached?
+    # Direct deletion from S3 when offer is destroyed
+    if media.attached?
+      media.purge
+      Rails.logger.info("Offer #{id}: Deleted #{media.count} media files from S3")
+    end
   end
 
   def validate_links_format

@@ -31,7 +31,11 @@ class BusinessSerializer < ActiveModel::Serializer
              :images,
              :favorites_count,
              :favorited_by_me,
-             :is_own_business
+             :is_own_business,
+             :address_cooldown_active,
+             :next_address_update_date,
+             :days_until_next_address_update,
+             :address_last_updated_at
 
   # =================================
   # COUNTS
@@ -198,6 +202,29 @@ class BusinessSerializer < ActiveModel::Serializer
     else
       object.likes.exists?(user_id: scope.id)
     end
+  end
+
+  # =================================
+  # ADDRESS COOLDOWN
+  # =================================
+  def address_cooldown_active
+    return false unless object.business_location
+    object.business_location.address_cooldown_active?
+  end
+
+  def next_address_update_date
+    return nil unless object.business_location
+    object.business_location.next_address_update_date&.strftime("%d %B %Y")
+  end
+
+  def days_until_next_address_update
+    return 0 unless object.business_location
+    object.business_location.days_until_next_address_update
+  end
+
+  def address_last_updated_at
+    return nil unless object.business_location
+    object.business_location.address_last_updated_at
   end
 
   private

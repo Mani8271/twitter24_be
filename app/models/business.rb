@@ -61,8 +61,15 @@ class Business < ApplicationRecord
   private
 
   def cleanup_media
-    profile_picture.purge_later if profile_picture.attached?
-    shop_images.purge_later if shop_images.attached?
+    # Direct deletion from S3 when business is destroyed
+    if profile_picture.attached?
+      profile_picture.purge
+      Rails.logger.info("Business #{id}: Deleted profile picture from S3")
+    end
+    if shop_images.attached?
+      shop_images.purge
+      Rails.logger.info("Business #{id}: Deleted #{shop_images.count} shop images from S3")
+    end
   end
 
   public

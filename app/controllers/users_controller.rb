@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+  include MediaReplacement
   # authorize_request already runs
 
   # GET /me
@@ -10,9 +11,8 @@ class UsersController < ApplicationController
   def update_me
     if current_user.update(user_params)
       begin
-        attach_profile_picture
-        delete_profile_picture if params[:delete_profile_picture].present?
-      rescue ArgumentError => e
+        handle_profile_picture_update
+      rescue StandardError => e
         return render json: { errors: [e.message] }, status: :unprocessable_entity
       end
       render json: current_user, serializer: UserSerializer
@@ -67,7 +67,14 @@ class UsersController < ApplicationController
     )
   end
 
-  def attach_profile_picture
+  def handle_profile_picture_update
+    # Handle profile picture deletion
+    if params[:delete_profile_picture].present?
+      delete_all_attachments(current_user, :profile_picture)
+      return
+    end
+
+    # Handle profile picture replacement
     return unless params[:profile_picture].present?
 
     file = params[:profile_picture]
@@ -82,10 +89,7 @@ class UsersController < ApplicationController
       raise ArgumentError, "Profile picture must be 10 MB or smaller."
     end
 
-    current_user.profile_picture.attach(file)
-  end
-
-  def delete_profile_picture
-    current_user.profile_picture.purge if current_user.profile_picture.attached?
+    # Safely replace the profile picture (old file will be deleted)
+    replace_media(current_user, :profile_picture, file)
   end
 end
