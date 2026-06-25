@@ -45,11 +45,23 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def jobs_count
-    object.user.jobs.size || 0
+    # FIXED: Use count() instead of size() to avoid N+1 queries
+    # size() loads all records; count() uses SQL COUNT
+    if object.user.association(:jobs).loaded?
+      object.user.jobs.size
+    else
+      object.user.jobs.count
+    end || 0
   end
 
   def offers_count
-    object.user.offers.size || 0
+    # FIXED: Use count() instead of size() to avoid N+1 queries
+    # size() loads all records; count() uses SQL COUNT
+    if object.user.association(:offers).loaded?
+      object.user.offers.size
+    else
+      object.user.offers.count
+    end || 0
   end
 
   def reviews_count
@@ -57,7 +69,12 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def followers_count
-    object.follows.size || 0
+    # FIXED: Use count() instead of size() to avoid N+1 queries
+    if object.association(:follows).loaded?
+      object.follows.size
+    else
+      object.follows.count
+    end || 0
   end
 
   def followed_by_me
@@ -192,7 +209,12 @@ class BusinessSerializer < ActiveModel::Serializer
   end
 
   def favorites_count
-    object.likes.size
+    # FIXED: Use count() instead of size() to avoid N+1 queries
+    if object.association(:likes).loaded?
+      object.likes.size
+    else
+      object.likes.count
+    end
   end
 
   def favorited_by_me

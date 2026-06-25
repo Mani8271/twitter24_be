@@ -1,5 +1,18 @@
 class User < ApplicationRecord
   has_secure_password
+
+  # Password security validations - only enforce on create/update with password change
+  validates :password,
+    length: { minimum: 12, message: "must be at least 12 characters" },
+    if: -> { password.present? }
+
+  validates :password,
+    format: {
+      with: /\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+      message: "must contain uppercase, lowercase, number, and special character (@$!%*?&)"
+    },
+    if: -> { password.present? }
+
   has_one_attached :profile_picture
 
   before_destroy :cleanup_media
@@ -54,18 +67,23 @@ has_one :live_location, dependent: :destroy
  end
 
  # Atomically increments the cumulative counter for a feature.
- # Uses a raw SQL JSONB update so concurrent requests don't clobber each other.
+ # Uses parameterized SQL to prevent injection while maintaining atomic JSONB updates.
  def increment_subscription_usage!(feature_key)
    key = feature_key.to_s
    raise ArgumentError, "Invalid usage key: #{key}" unless key.in?(USAGE_FEATURE_KEYS)
 
-   User.where(id: id).update_all(
+   # Use parameterized SQL array to safely pass the key, preventing injection
+   update_sql = self.class.sanitize_sql_array([
      "subscription_usage = jsonb_set(" \
      "  COALESCE(subscription_usage, '{}')," \
-     "  '{#{key}}'," \
-     "  to_jsonb(COALESCE((subscription_usage->>'#{key}')::int, 0) + 1)" \
-     ")"
-   )
+     "  ?::text[]," \
+     "  to_jsonb(COALESCE(CAST(subscription_usage->? AS integer), 0) + 1)" \
+     ")",
+     "{#{key}}",
+     key
+   ])
+
+   User.where(id: id).update_all(update_sql)
    reload
  end
 

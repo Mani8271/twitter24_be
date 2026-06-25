@@ -1,6 +1,13 @@
 class CommentsController < ApplicationController
   before_action :authorize_request
 
+  # FIXED: Explicit type mapping instead of constantize
+  COMMENTABLE_TYPES = {
+    "GlobalFeed" => GlobalFeed,
+    "Offer" => Offer,
+    "Job" => Job
+  }.freeze
+
   def index
     commentable = find_commentable
 
@@ -40,13 +47,22 @@ class CommentsController < ApplicationController
   private
 
   def find_commentable
-    allowed_types = %w[GlobalFeed FreedCrate]
-
     type = params.require(:commentable_type)
     id   = params.require(:commentable_id)
 
-    raise ActiveRecord::RecordNotFound unless allowed_types.include?(type)
+    # FIXED: Use explicit type mapping instead of constantize
+    klass = COMMENTABLE_TYPES[type]
 
-    type.constantize.find(id)
+    unless klass
+      render json: { error: "Invalid commentable type" }, status: :bad_request
+      return nil
+    end
+
+    begin
+      klass.find(id)
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "#{type} not found" }, status: :not_found
+      nil
+    end
   end
 end

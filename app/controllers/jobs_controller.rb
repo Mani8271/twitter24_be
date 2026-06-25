@@ -46,7 +46,10 @@ class JobsController < ApplicationController
     jobs = jobs.sorted_by(params[:sort])
 
     total = jobs.count
-    jobs  = jobs.offset((page - 1) * per_page).limit(per_page)
+    # FIXED: Add eager loading to prevent N+1 queries when serializing
+    jobs  = jobs.includes(:user, :images)
+               .offset((page - 1) * per_page)
+               .limit(per_page)
 
     render json: {
       jobs: ActiveModelSerializers::SerializableResource.new(jobs, each_serializer: JobSerializer, scope: current_user).as_json,
@@ -62,6 +65,8 @@ class JobsController < ApplicationController
 
   # GET /jobs/:id
   def show
+    # FIXED: Eager load associations to prevent N+1 queries
+    @job = @job.includes(:user, :images) if @job
     render json: @job, serializer: JobSerializer, scope: current_user
   end
 
@@ -109,7 +114,9 @@ class JobsController < ApplicationController
   private
 
   def set_job
-    @job = Job.find(params[:id])
+    # FIXED: Eager load associations to prevent N+1 queries in show/update/destroy
+    @job = Job.includes(:user, :images)
+              .find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: "Job not found" }, status: :not_found
   end

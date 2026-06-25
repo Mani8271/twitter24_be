@@ -2,7 +2,17 @@ class LikesController < ApplicationController
   before_action :authorize_request
   before_action :set_likeable
 
+  # FIXED: Explicit type mapping instead of constantize
+  LIKEABLE_TYPES = {
+    "GlobalFeed" => GlobalFeed,
+    "Business" => Business,
+    "Job" => Job,
+    "Offer" => Offer
+  }.freeze
+
   def create
+    return if @likeable.nil?
+
     # Prevent liking own content
     if @likeable.respond_to?(:user_id) && @likeable.user_id == current_user.id
       return render json: { error: "You cannot like your own content" }, status: :forbidden
@@ -27,11 +37,22 @@ class LikesController < ApplicationController
   private
 
   def set_likeable
-    allowed_types = %w[GlobalFeed Business]
-
     type = params[:likeable_type]
-    raise ActiveRecord::RecordNotFound unless allowed_types.include?(type)
+    likeable_id = params[:likeable_id]
 
-    @likeable = type.constantize.find(params[:likeable_id])
+    # FIXED: Use explicit type mapping instead of constantize
+    klass = LIKEABLE_TYPES[type]
+
+    unless klass
+      render json: { error: "Invalid likeable type" }, status: :bad_request
+      return nil
+    end
+
+    begin
+      @likeable = klass.find(likeable_id)
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "#{type} not found" }, status: :not_found
+      nil
+    end
   end
 end

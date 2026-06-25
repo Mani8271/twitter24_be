@@ -88,7 +88,8 @@ class AuthController < ApplicationController
         resets_in_hours: outcome[:hours_left]
       }, status: :too_many_requests
     else
-      Rails.logger.info "OTP sent to #{outcome[:phone]}: #{outcome[:otp]} (send #{MAX_OTP_RESENDS_PER_DAY - outcome[:resends_remaining]}/#{MAX_OTP_RESENDS_PER_DAY} today)"
+      # Log OTP send without exposing the code itself
+      Rails.logger.info "OTP sent to phone ending in #{outcome[:phone][-4..-1]} (send #{MAX_OTP_RESENDS_PER_DAY - outcome[:resends_remaining]}/#{MAX_OTP_RESENDS_PER_DAY} today)"
       render json: {
         message: "OTP sent to #{outcome[:phone]}",
         otp: outcome[:otp],
@@ -142,7 +143,7 @@ class AuthController < ApplicationController
     end
 
     token = JsonWebToken.encode({ user_id: user.id, token_version: user.token_version })
-    exp = 1.year.from_now.strftime("%m-%d-%Y %H:%M")
+    exp = 24.hours.from_now.strftime("%m-%d-%Y %H:%M")
 
     render json: {
       message: "Login successful",
@@ -161,15 +162,21 @@ class AuthController < ApplicationController
     user = User.find_by(phone_number: phone_number)
     return render(json: { error: "User not found" }, status: :not_found) unless user
 
-    otp_record = OtpCode.find_by(user_id: user.id, otp_number: otp_input)
+    # FIXED: Use usable scope to find only unused, valid OTPs
+    otp_record = OtpCode.usable.find_by(user_id: user.id, otp_number: otp_input)
 
-    if otp_record && otp_record.otp_number == otp_input
-      if otp_record.otp_expiry < Time.current
-        return render json: { error: "OTP expired" }, status: :unauthorized
+    if otp_record
+      # FIXED: Mark OTP as used to prevent reuse
+      begin
+        otp_record.mark_as_used!
+      rescue => e
+        Rails.logger.error "Error marking OTP as used for user #{user.id}: #{e.message}"
+        return render json: { error: "OTP verification failed. Please try again." }, status: :unprocessable_entity
       end
+
       user.update_column(:phone_verified, true)
       token = JsonWebToken.encode({ user_id: user.id, token_version: user.token_version })
-      exp_formatted = (Time.now + 365.days).strftime("%m-%d-%Y %H:%M")
+      exp_formatted = (Time.now + 24.hours).strftime("%m-%d-%Y %H:%M")
 
       render json: {
         message: "OTP verified successfully",
@@ -178,6 +185,16 @@ class AuthController < ApplicationController
         user: UserSerializer.new(user)
       }, status: :ok
     else
+      # Provide specific error message if OTP exists but is used or expired
+      existing = OtpCode.find_by(user_id: user.id, otp_number: otp_input)
+      if existing
+        if existing.already_used?
+          return render json: { error: "OTP has already been used. Please request a new OTP." }, status: :unprocessable_entity
+        elsif existing.expired?
+          return render json: { error: "OTP has expired. Please request a new OTP." }, status: :unauthorized
+        end
+      end
+
       render json: { error: "Invalid OTP" }, status: :unauthorized
     end
   end
@@ -250,7 +267,8 @@ class AuthController < ApplicationController
       otp = user.generate_otp
       user.increment!(:otp_resend_count)
 
-      Rails.logger.info "OTP auto-sent during signin for #{user.phone_number}: #{otp}"
+      # Log OTP send without exposing the code itself
+      Rails.logger.info "OTP auto-sent during signin for user #{user.id}"
       return {
         success: true,
         message: "OTP sent to your phone number",

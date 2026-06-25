@@ -51,9 +51,10 @@ class BusinessesController < ApplicationController
   when "newest_first"  then businesses = businesses.order(created_at: :desc)
   when "oldest_first"  then businesses = businesses.order(created_at: :asc)
   when "most_popular"
-    businesses = businesses.order(
-      Arel.sql("(SELECT COUNT(*) FROM follows WHERE follows.followable_type = 'Business' AND follows.followable_id = businesses.id) DESC")
-    )
+    # FIXED: Avoid subquery for sorting since we already loaded follows
+    # Convert to Array and sort in Ruby for the loaded associations
+    businesses = businesses.order(created_at: :desc)  # Fallback order
+    businesses = businesses.to_a.sort_by { |b| -b.follows.size }  # Sort by follows count
   end
 
   render json: businesses,

@@ -37,7 +37,10 @@ class OffersController < ApplicationController
       end
 
       total  = offers.count
-      offers = offers.offset((page - 1) * per_page).limit(per_page)
+      # FIXED: Add eager loading to prevent N+1 queries when serializing
+      offers = offers.includes(:user, :media_attachments, :likes, :comments, :views)
+                     .offset((page - 1) * per_page)
+                     .limit(per_page)
 
       render json: {
         offers: ActiveModelSerializers::SerializableResource.new(offers, each_serializer: OfferSerializer, scope: current_user).as_json,
@@ -53,6 +56,8 @@ class OffersController < ApplicationController
   
     # GET /api/v1/offers/:id
     def show
+      # FIXED: Eager load associations to prevent N+1 queries
+      @offer = @offer.includes(:user, :media_attachments, :likes, :comments, :views) if @offer
       render json: @offer, serializer: OfferSerializer, scope: current_user
     end
   
@@ -101,9 +106,11 @@ class OffersController < ApplicationController
     end
   
     private
-  
+
     def set_offer
-      @offer = Offer.find(params[:id])
+      # FIXED: Eager load associations to prevent N+1 queries in show/update/destroy
+      @offer = Offer.includes(:user, :media_attachments, :likes, :comments, :views)
+                    .find(params[:id])
     end
   
     def offer_params
